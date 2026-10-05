@@ -98,6 +98,9 @@ broadcast. Explicit prepare/sign/persist/submit remains available.
   failure. Classification does not authorize transaction resubmission.
 - `getVersion` returns nullable `releaseVersion` and `bundleManifestDigest`.
   Use `wireFormat` for compatibility; release identity is diagnostic.
+- RPC wire 9 and CLI JSON use canonical decimal strings for all 64-bit-or-wider
+  integers; preserve these quantities as `bigint` in TypeScript. Smaller bounded
+  integers remain JSON numbers.
 
 ### HTTP batching
 
