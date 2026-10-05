@@ -1,85 +1,84 @@
 # CLI
 
-## Local Development
+Command examples use Groundhog CLI 0.22.1. Run `groundhog --version` and the
+command's `--help` when checking another installed version.
 
-Use `groundhog init --non-interactive --json` for scripted setup. Missing Cargo,
-profile, or stored key exits 1. Key creation requires authorized `--generate-key`;
-existing selections are preserved. `--quiet` does not grant consent. `init` writes;
-`status --json` is read-only. Create projects with `groundhog new`.
+## Local development
 
-Start the local stack with `groundhog node`. Inspect, prefetch, or locate its
-catalog-pinned bundle with `toolchain list`, `toolchain install`, and `toolchain
-which`. `--offline node` forbids managed downloads, not RPC/Cargo elsewhere.
-`GROUNDHOG_DEVNODE_BINARY` selects a matching build. Diagnose compatibility
-failures; do not override protocols. Use `status --json` / `node --json` for runtime
-information and `--help` for flags. Never use deterministic local keys in production.
+```sh
+groundhog init
+groundhog new my-counter
+cd my-counter
+cargo test
+groundhog build
+groundhog test
+```
 
-`--non-interactive` disables prompts/UI without granting consent: protected
-operations require authorized `--force`. Key imports need piped stdin; Cargo/test
-subprocesses cannot read terminal stdin. Use `--json` for machine results.
+`init` configures the toolchain, profile, and key selection. It can prompt for
+registry access. `status --json` inspects setup without changing it. Keep the
+generated Cargo configuration and RV32 wrapper.
 
-`--no-ui` selects plain output; `NO_COLOR` disables color. Explicit live-output
-modes stream immediately without animation.
+Start `groundhog node` in a separate terminal. It selects a compatible managed
+runtime. Use `groundhog toolchain list --json` to inspect available versions and
+installation state. `GROUNDHOG_DEVNODE_BINARY` is for an explicit compatible
+runtime build. A compatibility error needs diagnosis, not a protocol override.
 
-Hosted signing can discover an unconfigured network hash from matching descriptor
-and RPC identities. Configured hashes remain enforced.
+An ephemeral node loses state when restarted. Use the CLI's persistent-node
+options when the application needs its deployments across restarts. Read the
+[local-node guide](https://docs.groundhog.dev/cli/local-node/).
 
-Timeout or `unknown` does not prove transaction failure. Inspect the hash before
-retrying. `node --verbose` enables backend logs; restarting an ephemeral node
-loses its state.
+## Keys and wallets
 
-`events list`, `tx list`, and `token transfers` read newest-first pages.
-Omit `--cursor` to refresh from the head; a continuation goes toward older rows.
-Continue with the returned opaque cursor and the same target/filters. `tx list`
-matches root invocation targets, not every address touched by a transaction.
-See [Event pages and restart](typescript.md#event-pages-and-restart) for cursor rules.
+Keep private keys in the CLI key store. `groundhog keys import <name>` accepts a
+seed through hidden input or stdin, not a command-line argument. A public key is
+not a wallet address; inspect the selected account with the wallet commands.
 
-### Key and address interoperability
+`groundhog wallet create` saves an account identity. Fund it explicitly with
+`groundhog airdrop` on a test network. Select the intended profile on commands
+that access the network. Never use deterministic local test keys outside a local
+test environment.
 
-`groundhog keys import <name>` reads a seed from hidden input or piped stdin:
-a checksummed S StrKey or 32-byte hex, never a 64-byte keypair or CLI argument.
-Existing names are not overwritten. Generation and import reject `dev-N` names,
-which are reserved for local bootstrap accounts.
-Import JSON uses a versioned camelCase report (`data.schemaVersion = 1`).
-Malformed TOML or an invalid `default_key` is rejected before storing the key.
-If saving succeeds but default selection fails, use `groundhog keys use <name>`;
-do not reimport. `isDefault` is null if configuration cannot be reread.
+For simulated caller checks, `groundhog view --from ADDRESS` supplies the caller.
+Omitting `--from` leaves the simulated caller unset. A selected signing wallet
+does not implicitly become the view caller.
 
-`groundhog keys export <name> --format strkey` exports the same seed as an S
-StrKey after the normal confirmation gate. The default export remains hex.
-For an authorized non-interactive transfer between key stores, pipe export
-stdout directly to the receiving CLI's stdin rather than capturing it in logs.
+## Deploy and initialize
 
-A G StrKey is an Ed25519 public key, distinct from an account or wallet address.
-C StrKeys and legacy hex are accepted for contract/wallet address inputs,
-including typed contract arguments. Saved wallet owners accept G StrKeys or
-hex public keys. These encodings preserve bytes and do not identify a network.
-Existing key files and public JSON-RPC wire encodings remain unchanged.
+Use `groundhog deploy --help` for the artifact argument and network options.
+Deployment requires an explicit `--fund <HOG>` storage-funding amount; zero skips
+the transfer. The CLI does not estimate this amount.
 
-### Native accounts
+Add `--init <METHOD>` and repeated `--init-arg <VALUE>` to initialize atomically
+with funding and deployment. The contract spec supplies argument types.
+`--init-gas-limit` sets the child-call budget. The initializer runs as the wallet;
+failure rolls back the operation. A dry run submits nothing.
 
-Ordinary keys derive nonce-zero native accounts. `wallet create` saves the empty
-identity offline; fund explicitly with `airdrop`. `--prefund` is rejected. Saved
-legacy wallets retain identity and format. Schema-3 bootstrap dev-N accounts
-are native pubkey accounts with nonce zero, using the advertised seed and keys.
-Use a matching native runtime; schema-2 state needs its original runtime.
+Keep the original hash and predicted address if confirmation fails. Follow
+[transaction inspection](troubleshooting.md#inspect-the-original-transaction)
+before creating another deployment.
 
-Wallet creation, selection, address inspection, and `status` ownership checks use
-cached public metadata without loading a private signer. Older keyfiles derive
-missing metadata from the keypair. Keep metadata consistent with the signing
-key: transaction commands still load the signer and check wallet ownership.
+## Inspect transactions and events
 
-`view --from` accepts saved wallets, ordinary keys, contract aliases, local
-`dev-N` accounts, and literal addresses. `dev-N` selects the manifest's bootstrap
-account even when a wallet or alias has the same name. Other saved wallets take
-precedence over aliases and keys. Native bindings retain their account nonce;
-legacy bindings retain their saved address. Omitting `--from` leaves the simulated
-caller unset, even when a default wallet is selected.
+```sh
+groundhog tx show TX_HASH --profile local --json
+groundhog events list CONTRACT_ADDRESS --profile local --limit 25 --json
+```
 
-Native deploy requires `--fund <HOG>` and hogd 0.1.29-rc.2 or later. The exact
-amount is not an estimate; zero skips transfer. Add `--init <METHOD>` and repeated
-`--init-arg <VALUE>` using the artifact spec, or a 0x selector and raw hex argument.
-`--init-gas-limit` sets child gas. Init runs as the wallet, discards its return,
-and rolls back with funding/deployment on failure. Dry-run submits nothing.
-Unverified results retain signed identity: inspect before retrying because nonce
-and address change. Aliases require verified success at the predicted address.
+Replace the uppercase values with the original hash and contract address. Use
+the transaction's original profile/network. `tx show` performs one lookup and
+fetches a receipt when committed; it does not wait or resubmit.
+
+`events list`, `tx list`, and `token transfers` return newest-first pages.
+Continue with the returned cursor and the same target/filters; omit the cursor
+to refresh from the head. Address transaction history matches root targets,
+which can be wallets rather than the application contract. Absence from such a
+list does not prove that a call failed.
+
+## Automation
+
+Use `--json` for structured results and `--non-interactive` to disable prompts.
+Non-interactive mode does not grant consent: key generation needs
+`--generate-key`, and protected actions need an explicitly authorized `--force`.
+`--quiet` only controls output. Never collect private-key exports in logs.
+
+Use the [diagnostic table](troubleshooting.md) when setup or execution fails.

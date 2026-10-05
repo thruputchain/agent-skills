@@ -1,22 +1,56 @@
 # Troubleshooting
 
-## Sources and Escalation
+Record the command, exit code, exact error, selected network, CLI version, and
+relevant dependency versions. Include public addresses and hashes, but redact
+tokens and private keys. Commands below use Groundhog CLI 0.22.1.
 
-Use this source order:
+## Diagnose the symptom
 
-1. Project `AGENTS.md`, manifests, generated artifacts, and current code.
-2. Installed `groundhog` help and structured output.
-3. Public SDK Rustdoc, TypeScript declarations, generated bindings, and
-   Groundhog developer documentation matching the installed versions.
-4. Current blessed examples.
-5. Public implementation source when a documented contract is incomplete.
-6. Dependency internals only when debugging the dependency itself or when the
-   public contract cannot answer the question.
+| Symptom | Evidence to collect | Next action |
+| --- | --- | --- |
+| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @groundhogchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup) or [CLI setup](https://docs.groundhog.dev/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
+| Runtime or network descriptor is incompatible | `groundhog --version`, `groundhog status --json`, `groundhog toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
+| Generated binding and client disagree | `npm ls @groundhogchain/client @groundhogchain/protocol @groundhogchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `groundhog codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
+| Submission or observation times out | Original hash, network, signed evidence if saved, error cause and submission cause | Run the inspection procedure below. Keep observing the original hash. A timeout stops observation, not execution; do not sign a replacement automatically. |
+| Transaction committed but execution failed | Receipt, execution result, revert data if present, root wallet method, intended child calls, gas limit and gas used | Fix the reported authorization, balance, storage-funding, or execution-budget condition. Decode the known root first; root abort bytes are not automatically a child exception. A new user-authorized attempt is a new transaction. |
+| Execution succeeded but return decoding failed | Successful receipt, generated binding, deployed spec, and decoder error | Correct the decoder or binding and decode the same receipt again. Do not repeat a successful write to obtain its return value. |
 
-When sources disagree, stop and identify the versions and exact disagreement.
-Do not silently combine APIs from different Groundhog releases. Prefer the
-installed scaffold and the public dependencies selected by that project.
+## Inspect the original transaction
 
-Never print, log, store, or paste private signing material. Use public
-addresses, transaction hashes, and redacted configuration when reporting a
-problem.
+1. Recover the hash from the submission result, `TransactionObservationError`,
+   or the saved `onSigned` record. Keep its original account and network.
+2. Inspect the CLI profile's endpoint and identity. Use the profile that matches
+   the saved network, not whichever profile is currently selected:
+
+   ```sh
+   groundhog config get local --sources
+   groundhog tx show TX_HASH --profile local --json
+   ```
+
+   Replace `local` with the original profile and `TX_HASH` with the original
+   32-byte hash. Do not send a seed or signed transaction to this command.
+   If the application has no CLI profile, use its public client and
+   `inspectPending()` below rather than selecting an unrelated profile.
+3. Read the status and, when available, the receipt's execution result:
+
+   | Result | Next action |
+   | --- | --- |
+   | `pending` | Keep the hash and repeat the read-only lookup later. |
+   | `committed` with successful execution | Record the receipt height and refresh application reads. |
+   | `committed` with failed execution | Keep the receipt and diagnose its execution result. |
+   | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. |
+   | `invalid` | Inspect the reason. Do not hide it behind an automatic new signature. |
+   | `unknown`, `other`, missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
+
+For a browser app, call `inspectPending()` from the
+[wallet example](typescript.md#wallet-write-with-recovery). It needs only the
+public client on the original network, so it works after reload or wallet
+disconnect. `waitForTransactionReceipt` can resume polling but does not itself
+require successful execution. Check `receipt.execResult` before showing success.
+
+## Resolve an API disagreement
+
+Start with the project's manifests, generated binding, and installed CLI help.
+Then check the matching package's public declarations and usage guide. Inspect
+implementation source when those surfaces do not answer the question. Report
+the exact version and disagreement; do not combine incompatible APIs.
