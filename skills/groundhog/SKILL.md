@@ -45,21 +45,21 @@ the complete bundled guide.
 - Application invocations normally execute as children of a wallet root
   invocation. Use the public client or CLI to prepare and submit transactions.
 - Submission, commitment, and successful execution are different states.
-  After a timeout, inspect the original transaction hash before retrying.
-- Gas meters computation and bounds call depth. It has no token price and
+  After a timeout, follow [transaction inspection](references/troubleshooting.md#inspect-the-original-transaction).
+- Gas meters computation. It has no token price and
   is not burned. Declared root gas reserves scheduling capacity against free
   HOG; storage funding is separate.
-- Never print, log, store, or paste private signing material. Use public
+- Never print, log, or paste private signing material. Keep private keys in the
+  wallet or designated key store. Persist signed transaction evidence before
+  broadcast, as shown in the TypeScript example. Use public
   addresses, transaction hashes, and redacted configuration in reports.
 
 ## Documentation and versions
 
 Start at <https://docs.groundhog.dev/> for product documentation. The installed
 CLI's `groundhog docs` serves its selected documentation snapshot locally.
-Check command help for Markdown export and background-server support before
-using them with an older release.
 
 The installed skill follows the latest maintained source. CLI-bundled guidance
 is selected separately for that CLI release. Neither overrides the project's
-installed API. When sources disagree, identify the versions and exact
-disagreement rather than combining APIs from different releases.
+installed API. Each example names its dependency set. Start from that complete
+example, then check the project's installed declarations if its versions differ.

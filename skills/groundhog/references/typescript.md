@@ -1,132 +1,220 @@
 # TypeScript
 
-For read-only application work, start with the TypeScript application section.
-Contract builds and code generation apply when you own the contract interface.
+Use the public client and generated contract bindings. A descriptor prepares or
+decodes a call; it is not a connected contract instance.
 
-## Build Artifacts and TypeScript Codegen
+## Read a contract
 
-The Rust contract's `.spec.xdr` is the canonical interface. Build deployable RV32
-code and generate bindings together, or generate from an existing spec:
+Verified on 2026-10-05 with Node.js 22, `@groundhogchain/client` 0.14.0,
+`@groundhogchain/protocol` 0.12.0, TypeScript 6.0.3, and tsx 4.22.4.
+The exact read and wallet examples passed type checks and local-node execution
+with CLI 0.22.1, including observation failure and reload recovery.
+Configure [GitHub Packages access](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup),
+then create a directory and install:
 
-```console
+```sh
+npm init -y
+npm pkg set type=module
+npm install --save-exact @groundhogchain/client@0.14.0 @groundhogchain/protocol@0.12.0
+npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9.1
+```
+
+Start `groundhog node` in another terminal. This example reads the native HOG
+contract on the local network; no wallet, private key, or contract deployment is
+needed. For a hosted network, replace `localnet()` with its configured cluster.
+
+```ts title="read.ts"
+import { createGroundhogClient, localnet, formatUnits } from "@groundhogchain/client";
+import { ERC20 } from "@groundhogchain/client/contracts";
+import { HOG_ADDRESS } from "@groundhogchain/protocol";
+
+async function main() {
+  const client = await createGroundhogClient({ cluster: localnet() });
+  const supply = await ERC20.v0_1.totalSupply.view({
+    client,
+    contract: HOG_ADDRESS,
+  });
+  console.log("HOG supply:", formatUnits(supply.value, 7));
+  console.log("Read at block:", supply.height.toString());
+}
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : "Read failed");
+  process.exitCode = 1;
+});
+```
+
+Run `npx tsx read.ts`. Expect a supply and a read height, not a fixed block number.
+Keep amounts as `bigint`; `formatUnits` is for display. `parseUnits("0.0001", 7)`
+produces `1000n` without rounding.
+
+## Wallet write with recovery
+
+Use the same client/protocol versions in a browser app on HTTPS or localhost.
+The wallet and RPC must use the same local network. Fund the sending account and
+use a recipient that already has HOG for this small-transfer example. A new
+recipient also needs its balance-storage deposit.
+
+For a Vite app, forward same-origin RPC requests to the local node. This avoids
+depending on cross-origin access from the node's HTTP server:
+
+```ts title="vite.config.ts"
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  server: { proxy: { "/rpc": { target: "http://127.0.0.1:9545", rewrite: () => "/" } } },
+});
+```
+
+This single-tab module handles one unresolved transfer at a time. Call
+`sendHog(provider, receiver)` from the user's send action. Obtain `provider`
+through `discoverWalletProviders` from `@groundhogchain/client/provider` and
+let the user choose it. The example uses the first account authorized by that
+wallet. See the [wallet picker](https://docs.groundhog.dev/tools/wallet-integration/#discover-and-connect)
+for account selection and discovery cleanup.
+
+```ts title="wallet.ts"
+import {
+  addressFromHex, createGroundhogClient, gasAmount, hashFromHex, localnet,
+  parseUnits, toHex0x, TransactionExecutionError, TransactionObservationError,
+} from "@groundhogchain/client";
+import { ERC20 } from "@groundhogchain/client/contracts";
+import {
+  parseSignTransactionResult, parseWalletAccount, parseWalletNetworkHash,
+  parseWalletSession, type WalletProvider,
+} from "@groundhogchain/client/provider";
+import {
+  createProviderWalletClient, type PendingWalletTransaction,
+} from "@groundhogchain/client/wallet";
+import { HOG_ADDRESS } from "@groundhogchain/protocol";
+
+const client = await createGroundhogClient({
+  cluster: localnet({ rpcUrl: new URL("/rpc", window.location.origin).href }),
+});
+const networkHash = toHex0x(client.network.networkHash).slice(2);
+const storageKey = `hog-transfer:v1:${networkHash}`;
+let sending = false;
+
+function loadPending(): PendingWalletTransaction | null {
+  const raw = localStorage.getItem(storageKey);
+  if (raw === null) return null;
+  const value: unknown = JSON.parse(raw);
+  if (!value || typeof value !== "object") throw new Error("Invalid saved transfer");
+  const record = value as Record<string, unknown>;
+  if (record.version !== 1) throw new Error("Unsupported saved transfer version");
+  const savedNetwork = parseWalletNetworkHash(record.networkHash);
+  if (savedNetwork !== networkHash) throw new Error("Saved transfer is on another network");
+  return {
+    ...parseSignTransactionResult({ signedTransaction: record.signedTransaction, hash: record.hash }),
+    account: parseWalletAccount(record.account),
+    networkHash: savedNetwork,
+  };
+}
+
+export async function sendHog(provider: WalletProvider, receiver: string) {
+  if (sending || loadPending()) throw new Error("Inspect the existing transfer first");
+  const recipient = addressFromHex(receiver);
+  sending = true;
+  try {
+    const session = parseWalletSession(await provider.request({ method: "connect" }));
+    if (session.networkHash !== networkHash) throw new Error("Select the app network");
+    const account = session.accounts[0];
+    if (!account) throw new Error("No authorized account");
+    const wallet = createProviderWalletClient({ client, provider, account, networkHash });
+    try {
+      const invocation = ERC20.v0_1.transfer.invocation(
+        HOG_ADDRESS, gasAmount(500_000n),
+        { receiver: recipient, amount: parseUnits("0.0001", 7) },
+      );
+      const { receipt } = await wallet.executeAndWait(
+        { invocation, gasLimit: gasAmount(1_000_000n) },
+        {
+          onSigned: (pending) => {
+            if (loadPending()) throw new Error("An unresolved transfer is already saved");
+            localStorage.setItem(storageKey, JSON.stringify({ version: 1, ...pending }));
+          },
+          wait: { timeoutMs: 30_000 },
+        },
+      );
+      return { state: "committed" as const, receipt };
+    } catch (error) {
+      if (error instanceof TransactionExecutionError) {
+        return { state: "committed" as const, receipt: error.receipt };
+      }
+      if (error instanceof TransactionObservationError) {
+        return { state: "unobserved" as const, hash: toHex0x(error.txHash) };
+      }
+      throw error;
+    } finally {
+      wallet.dispose();
+    }
+  } finally {
+    sending = false;
+  }
+}
+
+// Call on reload or from a Check transaction button. No wallet connection needed.
+export async function inspectPending() {
+  const pending = loadPending();
+  if (!pending) return null;
+  const hash = hashFromHex(pending.hash);
+  const status = await client.getTransactionStatus(hash);
+  const receipt = status.status === "committed"
+    ? await client.getTransactionReceipt(hash) : null;
+  return { hash: pending.hash, account: pending.account.address, status, receipt };
+}
+
+// Call only after displaying the committed outcome and the user acknowledges it.
+export async function acknowledgeResult() {
+  const result = await inspectPending();
+  if (!result?.receipt) throw new Error("The transfer outcome is still unresolved");
+  localStorage.removeItem(storageKey);
+}
+```
+
+The SDK awaits `onSigned` before broadcast. Storage failure stops submission.
+The saved record contains signed bytes, hash, original account, and network,
+not a private key. A rejected signature creates no new record. A session change
+invalidates the adapter; it never selects another signer automatically.
+
+On `unobserved`, keep the record and call `inspectPending()` later, including
+after reload. If inspection fails, retain the record and show the error. Do not
+call `sendHog` again to recover it. Check `receipt.execResult ===
+ExecResult.ExecResultOK` (import `ExecResult` from the client) before showing
+success: a committed receipt can describe failed execution. An unresolved or
+corrupt saved record blocks new transfers rather than silently discarding evidence.
+
+The gas values are budgets for this example, not universal defaults. Gas has no
+token fee; free HOG supplies scheduling capacity and storage requires deposits.
+
+## Generate bindings for your own contract
+
+```sh
 groundhog build --bindings ts
-groundhog codegen ts path/to/contract.spec.xdr -o path/to/contract.ts
+groundhog codegen ts target/groundhog/my_contract.spec.xdr -o src/my-contract.ts
 ```
 
-Use installed `--help` for paths/options. Regenerate after API changes; never
-maintain a second TypeScript ABI. Plain build warns on codegen-incompatible names;
-`--bindings ts` makes them errors. Rename the reported declarations.
+Use the `.spec.xdr` from the deployed build. Regenerate after interface changes;
+do not edit the generated file or maintain a second ABI. Select an interface
+version such as `Counter.v0_1`. Use its `view` for reads and `invocation` for
+wallet execution. `getContract` can bind a descriptor, address, and client once.
 
-Build is offline. It reports code/memory sizes and warns above the default 256 KiB
-code limit; deployment enforces max_rv32_code_bytes and max_rv32_memory_bytes.
-Guest memory defaults to 64 KiB. Set `initial_memory_bytes` in
-`[package.metadata.groundhog]` (integer or `"128K"`) within the chain's limit.
-Build/test use it for linker layout and artifact metadata. `--stack-size` sets a
-reserve within that memory, not a larger total allowance.
+Use `executeCallsAndWait` when typed child return values are needed. Root receipt
+bytes belong to the wallet, not directly to its child contract. A decoding failure
+after successful execution is not a reason to repeat the write.
 
-Methods and types use interface/version paths: `ERC20.v0_1.transfer` and
-`ERC20.v0_1.TransferArgs`. Descriptors provide:
+## Events and transport
 
-- `invocation` and `call` to prepare calls;
-- `view` and `viewOutcome` for simulation;
-- `decodeArgs`, `decodeReturn`, and `decodeException` for known method data;
-- `decodeReceipt` and `decodeReceiptOutcome` for a known root method's receipt.
+- Generated event descriptors provide `filter`, `decode`, `allFromReceipt`, and
+  `singleFromReceipt`. Use their codecs rather than manually encoding topics.
+- Continue an opaque cursor with the same network, target, and filters. Stop on
+  an empty returned cursor, not an empty page.
+- Save event rows and progress together. For ascending ingestion, restart at the
+  last saved row height and deduplicate by transaction hash and event sequence.
+  A descending history page's oldest row is not a forward-ingestion checkpoint.
+- `latestBlock` is the indexer head. Check `oldestBlock` for retained-history gaps.
+- HTTP batching groups independent requests; it does not provide a shared
+  snapshot, ordering, or atomicity. Await dependent operations separately.
 
-`decodeArgs` consumes the complete input and returns undefined for no arguments.
-It verifies byte shape, not contract behavior. This runtime addition needs no new
-metadata; the separate spec/namespace migration requires regenerated bindings.
-
-Generated event descriptors such as `my_token.v1.events.Transfer` provide
-`decode`, `filter`, `allFromReceipt`, and `singleFromReceipt`. Types, enums, and
-events follow the spec id: crate, major, module, declaration. Value objects and
-type namespaces share paths, preserving erasable TypeScript and Node type
-stripping. Reserved path names, globalThis, and crate/interface names spec or
-decodeEvent take a leading `$`. Use generated codecs rather than manual XDR.
-
-Addresses, fixed 32-byte values, `u32`, `u64`, `u128`, `i32`, `i64`, `i128`,
-`U256`, `I256`, and `bool` are directly filterable topics. Integers use 32-byte
-big-endian values with zero/sign extension, not CXS scalar encoding. Strings
-and byte slices expose only a hash, not their preimage.
-
-## TypeScript Application Path
-
-Use public package exports and generated bindings, not package internals.
-For reads, connect a cluster-aware client to the selected network and contract.
-For signed execution, create or load an account, then bind a wallet.
-One public client supports multiple independent wallet bindings. Pubkey accounts
-use DefaultWallet, including schema-3 bootstrap accounts. Historical saved
-legacy source-address wallets use `devWalletAdapter`; preserve their addresses.
-Do not submit an application invocation directly as the transaction root.
-
-Select an interface version for values; explicit types use the full namespace:
-
-```ts
-import { Counter as CounterVersions } from "./counter";
-const Counter = CounterVersions.v0_1;
-type Result = CounterVersions.v0_1.GetResult;
-
-const result = await Counter.get.view({ client, contract, caller, signal });
-const invocation = Counter.increment.invocation(contract, callGas, { amount: 1n });
-const execution = await wallet.executeAndWait({ invocation, gasLimit: walletGas });
-```
-
-`method.call` retains decoders for `executeCallsAndWait` on wallets that expose
-child returns. For manual decoding, decode the known wallet root receipt first,
-then each known child's return buffer. DevWallet discards child returns. Never
-decode root abort bytes as a child's exception merely because there was one call.
-
-Submission, commitment, and execution success differ. `executeAndWait` requires
-success. `TransactionObservationError` retains the original hash; observe it on
-the original network after uncertainty, without automatically re-signing.
-Provider-backed helpers require `onSigned` to persist signed evidence before
-broadcast. Explicit prepare/sign/persist/submit remains available.
-
-### Amounts, reads, and diagnostics
-
-- Common primitives and constructors are client root exports. Protocol-only
-  symbols such as `HOG_ADDRESS` remain in the protocol package.
-- `parseUnits("12.05", 2)` returns `1205n`; `formatUnits(1205n, 2)` returns
-  `"12.05"`. Neither rounds. `ParseUnitsError` reports malformed input or excess
-  precision. Applications check positivity and ABI bounds.
-- ERC20 `adjustAllowance` takes a signed `difference` and an `exclusive` flag.
-  Exclusive locking does not make an earlier off-chain read current; a read
-  followed by a delta cannot guarantee an exact target allowance.
-- `getContract({ binding: Counter, address: contract, client })` binds defaults.
-  Pass `{ signal }` to actions and `signal` inside generated or bound view options.
-- `classifyReadError(error, { signal })` returns transient, permanent, cancelled,
-  or unknown without replacing errors. A bare `TypeError` is not proof of a network
-  failure. Classification does not authorize transaction resubmission.
-- `getVersion` returns nullable `releaseVersion` and `bundleManifestDigest`.
-  Use `wireFormat` for compatibility; release identity is diagnostic.
-
-### HTTP batching
-
-`new HttpTransport(url, { batch: true })` groups concurrent requests; defaults are
-`{ maxSize: 100, waitMs: 0 }`. It is off by default. Both supported servers cap
-arrays at 1,000 entries. Match responses by ID; RPC errors remain per-call.
-Shared HTTP or malformed-response failures affect the group. No automatic
-retry occurs. `timeoutMs` includes body reading after dispatch. One cancellation
-does not cancel neighboring calls. HTTP grouping provides no shared snapshot,
-execution order, or atomicity. Await dependent operations separately.
-
-### Event pages and restart
-
-`getContractEvents({ event, contractAddresses, topics, limit })` fetches one typed
-page. `iterateEventPages(query, { signal })` yields raw pages on demand, without
-prefetch, retries, polling, or persistence. Errors propagate. Break stops future
-requests; abort cancels an in-flight read.
-
-- Keep the network, target, and filters fixed. A cursor continues the original
-  historical scan, not future blocks. Raw requests still require order and anchor.
-- Wire `"0x"` is an empty `Uint8Array` in the client. Stop on an empty returned
-  cursor, not an empty page.
-- For ascending ingestion, start a new ascending scan with an empty cursor at
-  the last stored row's height. Deduplicate by transaction hash and event sequence
-  number (hash alone for refs). Save rows and progress together.
-- Refresh descending history with an empty cursor and client `anchor: "end"`
-  (raw RPC `atEnd`). Its last row is the oldest seen, not a forward checkpoint.
-- `latestBlock` is the indexer head, not an application checkpoint. Check
-  `oldestBlock` for lost history. Current indexers do not reliably reject corrupt
-  cursors; do not silently restart.
-
-See the [restart walkthrough](https://docs.groundhog.dev/tutorials/add-events-to-a-contract/#resume-without-missing-events).
+See [event recovery](https://docs.groundhog.dev/typescript/events/#resume-without-missing-events)
+and [transaction diagnostics](troubleshooting.md#inspect-the-original-transaction).

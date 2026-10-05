@@ -13,7 +13,7 @@ Compatible deltas can land together. A transaction with incompatible deltas is
 excluded and returned to the mempool. Do not add retry loops inside contract
 code to handle this exclusion.
 
-Gas meters computation and bounds cross-contract call depth. It has no token
+Gas meters computation. It has no token
 price and is not burned. Choose storage operations for correct conflict
 semantics, not gas-price optimisation.
 
@@ -28,13 +28,13 @@ every new address.
 For contract authors, `Balance` is the practical starting point for ordinary
 nonnegative amounts such as token balances, allowances, supply, deposits, and
 credits. It is backed by Groundhog's mergeable integer storage, but presents a
-zero-defaulting `u128` API that prevents negative values and absolute
+zero-defaulting `i128` API with values in `0..=i128::MAX`, without absolute
 replacement. Do not use raw `NNInt` for a balance unless the data model
 genuinely needs its lower-level signed-delta or explicit-base operations.
 
 - `Balance` is the ordinary type for balances, allowances, and supply. It uses
-  `u128`, defaults missing state to zero, exposes increases and decreases, and
-  does not expose absolute replacement or negative values.
+  nonnegative `i128` amounts, defaults missing state to zero, and exposes
+  increases and decreases. It rejects negative amounts and has no absolute set.
 - `NNInt` is the lower-level integer type for counters and state that needs
   signed deltas or an explicit base. Prefer `strict_inc` when execution must
   observe an immediate bound failure. Use `inc` only when deferring the bound
@@ -47,10 +47,9 @@ genuinely needs its lower-level signed-delta or explicit-base operations.
   form a scalable shared log.
 - `Bytestring` is raw byte storage for lower-level or infrequently replaced
   data. Prefer typed `Value<T>` when a typed value is available.
-- `RCQ<T>` is the SDK's retro-causal queue. Within a block, submission order
-  determines whether a consume sees another transaction's insert, and
-  concurrent consumes conflict. Use it only when those semantics match the
-  application.
+- `RCQ<T>` is the SDK's retrocausal queue for concurrent request insertion and
+  ordered processing. Use the [AMM guide](https://docs.groundhog.dev/tutorials/build-an-amm/)
+  for a complete queued application rather than assuming ordinary map semantics.
 
 For a token, use `Map<ContractAddress, Balance>` for per-account balances. For
 a counter, use `NNInt`. Do not implement either as read, calculate, and replace
@@ -81,52 +80,33 @@ RPC tests against an ephemeral local node. In a multi-contract Cargo workspace,
 Preserve the scaffold's feature names, RV32 binary wrapper, Cargo overlays, and
 self dev-dependency. They are toolchain contracts, not incidental style.
 
-That self dev-dependency puts the project name in the extern prelude of every
-test target, so `groundhog new` refuses names that would shadow something the
-generated project needs: Rust's built-in crates (`test`, `core`, `std`,
-`alloc`, `proc-macro`), Rust keywords, the scaffold's own dependencies (`sdk`,
-`tokio`, `groundhog-json-rpc-client`), Cargo's build directory names (`build`,
-`deps`, `examples`, `incremental`), and reserved Windows device names. The
-error names the collision; pick another name rather than patching the
-generated manifest.
-
 These examples use the Groundhog CLI 0.22.1 dependency set: SDK 0.42.2,
-standard interfaces 0.1.44, protocol-rs 0.43.0, and XDR 0.10.2. Check the
-project's actual dependencies before applying them. Update the SDK and
-interface dependencies together when migrating an existing Rust project.
+standard interfaces 0.1.44, protocol-rs 0.43.0, and XDR 0.10.2.
+
+## Complete Balance example
+
+Start from the maintained
+[ERC-20 contract](https://github.com/groundhogchain/groundhog-examples/tree/main/contracts/erc20)
+for a complete Balance-based implementation, including authorization, transfers,
+allowances, events, and tests. The source checked for this skill is
+[revision efb4250](https://github.com/groundhogchain/groundhog-examples/tree/efb425068d16b10fbb25c9bb980115737206a7e6/contracts/erc20),
+using the dependency set above.
+
+Read `src/implementation.rs` for `Map<ContractAddress, Balance>` and
+`tests/common/contract_test.rs` for transfer and bound checks. The checked debit
+uses `try_decrease`; the recipient credit uses `try_lazy_increase`. Matching
+storage operations can merge only when aggregate bounds and the transaction's
+other changes also permit it. Follow the repository's setup instructions and run
+both its native and RV32 tests before changing the implementation.
 
 The normal starter contract is a counter, one of the narrower cases where
 `NNInt` is appropriate. Do not copy this storage choice for token balances or
 other ordinary nonnegative amounts; use `Balance` for those.
-
-The contract shape is:
-
-```rust
-use sdk::storage::NNInt;
-use sdk::*;
-
-#[derive(Debug)]
-#[sdk::storage]
-pub struct Counter {
-    value: NNInt,
-}
-
-#[contract]
-impl Counter {
-    pub fn increment(&mut self, amount: u64) {
-        self.value.strict_inc(amount as i128);
-    }
-
-    pub fn get(&self) -> u64 {
-        self.value.try_get().none_if_missing().unwrap_or(0) as u64
-    }
-}
-```
 
 Keep contract logic in `src/implementation.rs`; keep `src/lib.rs` focused on
 the `no_std` gate, mock registration, module declaration, and public
 re-exports. Prefer `#[contract_exception]` for contract-facing exceptions.
 Update native and RV32 tests with behaviour changes.
 
-Before inventing a macro attribute or test helper, inspect the scaffold and the
-public Rustdoc for the SDK version the project actually uses.
+Use the scaffold and the public Rustdoc for the project's SDK version when
+looking up a macro attribute or test helper.
