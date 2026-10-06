@@ -2,7 +2,8 @@
 
 Record the command, exit code, exact error, selected network, CLI version, and
 relevant dependency versions. Include public addresses and hashes, but redact
-tokens and private keys. Commands below use Groundhog CLI 0.22.1.
+tokens and private keys. Commands below use Groundhog CLI 0.23.0; the status
+table describes RPC wire format 10.
 
 ## Diagnose the symptom
 
@@ -39,8 +40,14 @@ tokens and private keys. Commands below use Groundhog CLI 0.22.1.
    | `committed` with successful execution | Record the receipt height and refresh application reads. |
    | `committed` with failed execution | Keep the receipt and diagnose its execution result. |
    | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. |
+   | `retry` | Inspect the error source and code. Resubmitting the same transaction may succeed; the mempool does not retry it automatically. |
+   | `dropped` | Inspect the error source and code. Change the transaction before an authorized resubmission. |
    | `invalid` | Inspect the reason. Do not hide it behind an automatic new signature. |
    | `unknown`, `other`, missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
+
+An indexed committed record takes precedence over scheduler outcomes. A
+`committed` status can omit height while indexing catches up; do not interpret
+a missing height as a failed transaction or invent a height of zero.
 
 For a browser app, call `inspectPending()` from the
 [wallet example](typescript.md#wallet-write-with-recovery). It needs only the
