@@ -3,6 +3,17 @@
 Use the public client and generated contract bindings. A descriptor prepares or
 decodes a call; it is not a connected contract instance.
 
+Current RPC wire format 10 and CLI JSON encode all 64-bit-or-wider integers as
+canonical decimal strings, including small values. Preserve them as `bigint`
+in TypeScript; smaller bounded integers remain JSON numbers. Select a client
+that supports the target's `wireFormat`. The examples below retain their tested
+older dependency set and do not establish compatibility with wire format 10.
+
+Pubkey accounts, including hosted schema-3 bootstrap accounts, use DefaultWallet.
+Local schema-4 manifests contain public allocations; applications and harnesses
+own their signing keys. Preserve historical source-address wallet identities
+when using `devWalletAdapter` rather than deriving replacement addresses.
+
 ## Read a contract
 
 Verified on 2026-10-05 with Node.js 22, `@groundhogchain/client` 0.14.0,

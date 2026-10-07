@@ -80,8 +80,9 @@ RPC tests against an ephemeral local node. In a multi-contract Cargo workspace,
 Preserve the scaffold's feature names, RV32 binary wrapper, Cargo overlays, and
 self dev-dependency. They are toolchain contracts, not incidental style.
 
-These examples use the Groundhog CLI 0.22.1 dependency set: SDK 0.42.2,
-standard interfaces 0.1.44, protocol-rs 0.43.0, and XDR 0.10.2.
+The current CLI 0.24.0 scaffold uses SDK 0.44.2, standard interfaces 0.1.47,
+protocol-rs 0.46.0, and XDR 0.10.3. Check the generated manifest for the installed
+build. Update SDK and interface dependencies together when migrating a project.
 
 ## Complete Balance example
 
@@ -90,7 +91,9 @@ Start from the maintained
 for a complete Balance-based implementation, including authorization, transfers,
 allowances, events, and tests. The source checked for this skill is
 [revision efb4250](https://github.com/groundhogchain/groundhog-examples/tree/efb425068d16b10fbb25c9bb980115737206a7e6/contracts/erc20),
-using the dependency set above.
+using the older CLI 0.22.1 dependency set: SDK 0.42.2, standard interfaces
+0.1.44, protocol-rs 0.43.0, and XDR 0.10.2. Treat this as a versioned example;
+check the project's installed APIs before adapting it to newer dependencies.
 
 Read `src/implementation.rs` for `Map<ContractAddress, Balance>` and
 `tests/common/contract_test.rs` for transfer and bound checks. The checked debit
