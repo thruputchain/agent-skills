@@ -27,7 +27,7 @@ Use the dependencies and network selected by the project.
 
 ## Choose a reference
 
-| Task | Read | Bundled CLI access |
+| Task | Read | Installed CLI access |
 | --- | --- | --- |
 | Contract logic, storage, native and RV32 tests | [Contracts](references/contracts.md) | `groundhog skill show contracts` |
 | Generated bindings, application reads, wallet execution, events | [TypeScript](references/typescript.md) | `groundhog skill show typescript` |
@@ -35,8 +35,10 @@ Use the dependencies and network selected by the project.
 | CLI setup, keys, wallets, deployment, local nodes | [CLI](references/cli.md) | `groundhog skill show cli` |
 | Errors, version disagreements, uncertain submissions | [Troubleshooting](references/troubleshooting.md) | `groundhog skill show troubleshooting` |
 
-Read references as needed. Use `groundhog skill show --all` when you need
-the complete bundled guide.
+Read references as needed. `groundhog skill show` prints the installed entry
+point; `groundhog skill show <topic>` prints one installed reference file.
+These reads work offline. If the skill is absent, run `groundhog skill install`
+first. Use `groundhog skill list` to see the installed references.
 
 ## Shared rules
 
@@ -59,7 +61,7 @@ the complete bundled guide.
 Start at <https://docs.groundhog.dev/> for product documentation. The installed
 CLI's `groundhog docs` serves its selected documentation snapshot locally.
 
-The installed skill follows the latest maintained source. CLI-bundled guidance
-is selected separately for that CLI release. Neither overrides the project's
-installed API. Each example names its dependency set. Start from that complete
+The installed skill follows this maintained source; the CLI carries no separate
+skill copy. Installed guidance does not override the project's installed API.
+Each example names its dependency set. Start from that complete
 example, then check the project's installed declarations if its versions differ.

@@ -21,10 +21,14 @@ npx skills update groundhog --project
 npx skills update groundhog --global
 ```
 
-The installed skill follows this repository. The Groundhog CLI also bundles
-a selected snapshot for offline, release-matched guidance. Those snapshots
-can differ from the latest installed skill. Use the project's dependency
-versions and installed CLI help when they differ from examples.
+The installed skill follows this repository. `groundhog skill show` reads its
+entry point, `groundhog skill show <topic>` reads a reference, and
+`groundhog skill list` lists references. Reads prefer the installation in the
+current directory, then the global installation; use `--global` to select the
+latter explicitly. These commands read local files without Node/npm or network
+access and report an error if the skill is absent. The CLI contains no separate
+skill copy. Use the project's dependency versions and installed CLI help when
+they differ from examples.
 
 ## Structure
 
@@ -58,4 +62,4 @@ provider with real local transactions; they do not require an installed extensio
 
 Verify API claims against the owning Groundhog source and test representative
 contract and application tasks. The source files here are maintained directly;
-CLI bundles are imported copies, not a second editable source.
+the CLI reads the installed files instead of embedding a copy.
