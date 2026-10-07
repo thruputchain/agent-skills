@@ -1,6 +1,6 @@
 # CLI
 
-This reference covers Groundhog CLI 0.23.0 with schema-4 local manifests and
+This reference covers Groundhog CLI 0.24.0 with schema-4 local manifests and
 RPC wire format 10. Run `groundhog --version` and the command's `--help` to
 check the installed build; these contracts can change independently of the
 CLI package version.

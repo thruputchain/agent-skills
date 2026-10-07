@@ -80,7 +80,7 @@ RPC tests against an ephemeral local node. In a multi-contract Cargo workspace,
 Preserve the scaffold's feature names, RV32 binary wrapper, Cargo overlays, and
 self dev-dependency. They are toolchain contracts, not incidental style.
 
-The current CLI 0.23.0 scaffold uses SDK 0.44.2, standard interfaces 0.1.47,
+The current CLI 0.24.0 scaffold uses SDK 0.44.2, standard interfaces 0.1.47,
 protocol-rs 0.46.0, and XDR 0.10.3. Check the generated manifest for the installed
 build. Update SDK and interface dependencies together when migrating a project.
 

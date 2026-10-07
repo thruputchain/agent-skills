@@ -2,7 +2,7 @@
 
 Record the command, exit code, exact error, selected network, CLI version, and
 relevant dependency versions. Include public addresses and hashes, but redact
-tokens and private keys. Commands below use Groundhog CLI 0.23.0; the status
+tokens and private keys. Commands below use Groundhog CLI 0.24.0; the status
 table describes RPC wire format 10.
 
 ## Diagnose the symptom
