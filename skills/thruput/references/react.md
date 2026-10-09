@@ -17,7 +17,7 @@ and install:
 npm install --save-exact @groundhogchain/react@0.3.1 @groundhogchain/client@0.11.0 @groundhogchain/protocol@0.12.0 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
 ```
 
-Start `groundhog node` in another terminal. Keep the app's `<div id="root"></div>`
+Start `thruput node` in another terminal. Keep the app's `<div id="root"></div>`
 and configure a same-origin development proxy in `vite.config.ts`:
 
 ```ts title="vite.config.ts"
@@ -110,4 +110,4 @@ React package.
 
 - [Package setup and wallet usage](https://github.com/groundhogchain/react#configure-the-application)
 - [Contract reads and execution guide](https://github.com/groundhogchain/react/blob/main/docs/contract-transactions.md)
-- [React documentation](https://docs.groundhog.dev/react/)
+- [React documentation](https://docs.thruput.network/react/)

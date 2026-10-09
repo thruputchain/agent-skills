@@ -27,7 +27,7 @@ every new address.
 
 For contract authors, `Balance` is the practical starting point for ordinary
 nonnegative amounts such as token balances, allowances, supply, deposits, and
-credits. It is backed by Groundhog's mergeable integer storage, but presents a
+credits. It is backed by Thruput's mergeable integer storage, but presents a
 zero-defaulting `i128` API with values in `0..=i128::MAX`, without absolute
 replacement. Do not use raw `NNInt` for a balance unless the data model
 genuinely needs its lower-level signed-delta or explicit-base operations.
@@ -48,7 +48,7 @@ genuinely needs its lower-level signed-delta or explicit-base operations.
 - `Bytestring` is raw byte storage for lower-level or infrequently replaced
   data. Prefer typed `Value<T>` when a typed value is available.
 - `RCQ<T>` is the SDK's retrocausal queue for concurrent request insertion and
-  ordered processing. Use the [AMM guide](https://docs.groundhog.dev/tutorials/build-an-amm/)
+  ordered processing. Use the [AMM guide](https://docs.thruput.network/tutorials/build-an-amm/)
   for a complete queued application rather than assuming ordinary map semantics.
 
 For a token, use `Map<ContractAddress, Balance>` for per-account balances. For
@@ -61,26 +61,26 @@ Start from the installed scaffold instead of recreating its Cargo and RV32
 configuration:
 
 ```console
-groundhog new my-contract
+thruput new my-contract
 cd my-contract
 cargo test
-groundhog build
-groundhog test
+thruput build
+thruput test
 ```
 
-Use `cargo test` for fast native tests. Use `groundhog test` for the generated
+Use `cargo test` for fast native tests. Use `thruput test` for the generated
 RV32 artifact. They exercise different paths and neither substitutes for the
 other. The scaffolded SDK downloads its test executor from public storage.
-Building a scaffold needs Cargo credentials for the Groundhog registry; the
-Getting Started guide covers that setup. Use `groundhog test --integration` for
+Building a scaffold needs Cargo credentials for the Thruput registry; the
+Getting Started guide covers that setup. Use `thruput test --integration` for
 RPC tests against an ephemeral local node. In a multi-contract Cargo workspace,
-`groundhog test --workspace` runs the RV32 tests of every member that has a
+`thruput test --workspace` runs the RV32 tests of every member that has a
 `tests/test_rv32.rs` target and reports them together.
 
 Preserve the scaffold's feature names, RV32 binary wrapper, Cargo overlays, and
 self dev-dependency. They are toolchain contracts, not incidental style.
 
-The current CLI 0.24.0 scaffold uses SDK 0.44.2, standard interfaces 0.1.47,
+The CLI 0.24.0 scaffold used SDK 0.44.2, standard interfaces 0.1.47,
 protocol-rs 0.46.0, and XDR 0.10.3. Check the generated manifest for the installed
 build. Update SDK and interface dependencies together when migrating a project.
 

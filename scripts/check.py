@@ -1,4 +1,4 @@
-"""Validate the Groundhog skill's entry point and local reference links."""
+"""Validate the Thruput skill's entry point and local reference links."""
 
 from pathlib import Path
 import re
@@ -7,7 +7,7 @@ import re
 def check(root: Path) -> None:
     entry = root / "SKILL.md"
     text = entry.read_text()
-    assert text.startswith("---\nname: groundhog\n"), "invalid skill identity"
+    assert text.startswith("---\nname: thruput\n"), "invalid skill identity"
     assert "description:" in text.split("---", 2)[1], "missing description"
     assert len(text.splitlines()) < 500, "entry point is too long"
     references = set()
@@ -27,5 +27,5 @@ def check(root: Path) -> None:
 
 
 if __name__ == "__main__":
-    check(Path(__file__).resolve().parents[1] / "skills" / "groundhog")
-    print("Groundhog skill checks passed")
+    check(Path(__file__).resolve().parents[1] / "skills" / "thruput")
+    print("Thruput skill checks passed")
