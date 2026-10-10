@@ -8,7 +8,7 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const work = await mkdtemp(join(tmpdir(), 'groundhog-skill-examples-'));
+const work = await mkdtemp(join(tmpdir(), 'thruput-skill-examples-'));
 console.log(`Example evidence: ${work}`);
 
 async function run(command, args, cwd) {
@@ -20,7 +20,7 @@ async function run(command, args, cwd) {
 for (const kind of ['typescript', 'react']) {
   const directory = join(work, kind);
   await mkdir(directory);
-  const source = await readFile(join(root, `skills/groundhog/references/${kind}.md`), 'utf8');
+  const source = await readFile(join(root, `skills/thruput/references/${kind}.md`), 'utf8');
   const blocks = [...source.matchAll(/```(?:ts|tsx) title="([\w.-]+)"\n([\s\S]*?)\n```/g)];
   assert.equal(blocks.length, kind === 'typescript' ? 3 : 2);
   for (const [, name, code] of blocks) await writeFile(join(directory, name), `${code}\n`);

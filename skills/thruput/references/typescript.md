@@ -3,11 +3,11 @@
 Use the public client and generated contract bindings. A descriptor prepares or
 decodes a call; it is not a connected contract instance.
 
-Current RPC wire format 10 and CLI JSON encode all 64-bit-or-wider integers as
+Current RPC wire format 11.1.0 and CLI JSON encode all 64-bit-or-wider integers as
 canonical decimal strings, including small values. Preserve them as `bigint`
 in TypeScript; smaller bounded integers remain JSON numbers. Select a client
 that supports the target's `wireFormat`. The examples below retain their tested
-older dependency set and do not establish compatibility with wire format 10.
+older dependency set and do not establish compatibility with wire format 11.1.0.
 
 Pubkey accounts, including hosted schema-3 bootstrap accounts, use DefaultWallet.
 Local schema-4 manifests contain public allocations; applications and harnesses
@@ -30,7 +30,7 @@ npm install --save-exact @groundhogchain/client@0.14.0 @groundhogchain/protocol@
 npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9.1
 ```
 
-Start `groundhog node` in another terminal. This example reads the native HOG
+Start `thruput node` in another terminal. This example reads the native HOG
 contract on the local network; no wallet, private key, or contract deployment is
 needed. For a hosted network, replace `localnet()` with its configured cluster.
 
@@ -81,7 +81,7 @@ This single-tab module handles one unresolved transfer at a time. Call
 `sendHog(provider, receiver)` from the user's send action. Obtain `provider`
 through `discoverWalletProviders` from `@groundhogchain/client/provider` and
 let the user choose it. The example uses the first account authorized by that
-wallet. See the [wallet picker](https://docs.groundhog.dev/tools/wallet-integration/#discover-and-connect)
+wallet. See the [wallet picker](https://docs.thruput.network/tools/wallet-integration/#discover-and-connect)
 for account selection and discovery cleanup.
 
 ```ts title="wallet.ts"
@@ -201,8 +201,8 @@ token fee; free HOG supplies scheduling capacity and storage requires deposits.
 ## Generate bindings for your own contract
 
 ```sh
-groundhog build --bindings ts
-groundhog codegen ts target/groundhog/my_contract.spec.xdr -o src/my-contract.ts
+thruput build --bindings ts
+thruput codegen ts target/thruput/my_contract.spec.xdr -o src/my-contract.ts
 ```
 
 Use the `.spec.xdr` from the deployed build. Regenerate after interface changes;
@@ -227,5 +227,5 @@ after successful execution is not a reason to repeat the write.
 - HTTP batching groups independent requests; it does not provide a shared
   snapshot, ordering, or atomicity. Await dependent operations separately.
 
-See [event recovery](https://docs.groundhog.dev/typescript/events/#resume-without-missing-events)
+See [event recovery](https://docs.thruput.network/typescript/events/#resume-without-missing-events)
 and [transaction diagnostics](troubleshooting.md#inspect-the-original-transaction).

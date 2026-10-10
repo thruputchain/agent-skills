@@ -2,16 +2,16 @@
 
 Record the command, exit code, exact error, selected network, CLI version, and
 relevant dependency versions. Include public addresses and hashes, but redact
-tokens and private keys. Commands below use Groundhog CLI 0.24.0; the status
-table describes RPC wire format 10.
+tokens and private keys. Commands below use the Thruput CLI; the status
+table describes RPC wire format 11.1.0.
 
 ## Diagnose the symptom
 
 | Symptom | Evidence to collect | Next action |
 | --- | --- | --- |
-| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @groundhogchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup) or [CLI setup](https://docs.groundhog.dev/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
-| Runtime or network descriptor is incompatible | `groundhog --version`, `groundhog status --json`, `groundhog toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
-| Generated binding and client disagree | `npm ls @groundhogchain/client @groundhogchain/protocol @groundhogchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `groundhog codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
+| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @groundhogchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup) or [CLI setup](https://docs.thruput.network/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
+| Runtime or network descriptor is incompatible | `thruput --version`, `thruput status --json`, `thruput toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
+| Generated binding and client disagree | `npm ls @groundhogchain/client @groundhogchain/protocol @groundhogchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `thruput codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
 | Submission or observation times out | Original hash, network, signed evidence if saved, error cause and submission cause | Run the inspection procedure below. Keep observing the original hash. A timeout stops observation, not execution; do not sign a replacement automatically. |
 | Transaction committed but execution failed | Receipt, execution result, revert data if present, root wallet method, intended child calls, gas limit and gas used | Fix the reported authorization, balance, storage-funding, or execution-budget condition. Decode the known root first; root abort bytes are not automatically a child exception. A new user-authorized attempt is a new transaction. |
 | Execution succeeded but return decoding failed | Successful receipt, generated binding, deployed spec, and decoder error | Correct the decoder or binding and decode the same receipt again. Do not repeat a successful write to obtain its return value. |
@@ -24,8 +24,8 @@ table describes RPC wire format 10.
    the saved network, not whichever profile is currently selected:
 
    ```sh
-   groundhog config get local --sources
-   groundhog tx show TX_HASH --profile local --json
+   thruput config get local --sources
+   thruput tx show TX_HASH --profile local --json
    ```
 
    Replace `local` with the original profile and `TX_HASH` with the original
@@ -46,8 +46,8 @@ table describes RPC wire format 10.
    | `unknown`, `other`, missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
 
 An indexed committed record takes precedence over scheduler outcomes. A
-`committed` status can omit height while indexing catches up; do not interpret
-a missing height as a failed transaction or invent a height of zero.
+`committed` status includes its block height. The receipt may remain unavailable
+until indexing catches up; keep the original hash and inspect it again.
 
 For a browser app, call `inspectPending()` from the
 [wallet example](typescript.md#wallet-write-with-recovery). It needs only the

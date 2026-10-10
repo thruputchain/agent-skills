@@ -15,8 +15,8 @@ import { parseProviderRequest, parseTransactionHex, parseSignedTransactionHex } 
 import { codec, serialize } from '@groundhogchain/protocol';
 
 const kind = process.argv[2];
-const cli = process.env.GROUNDHOG_CLI;
-assert.ok(cli, 'Set GROUNDHOG_CLI to an absolute CLI 0.22.1 binary path');
+const cli = process.env.THRUPUT_CLI;
+assert.ok(cli, 'Set THRUPUT_CLI to an absolute Thruput CLI binary path');
 const node = spawn(cli, ['node', '--port', '9545', '--json', '--non-interactive'], {
   env: { ...process.env, TMPDIR: process.cwd(), XDG_CONFIG_HOME: join(process.cwd(), 'config') },
   stdio: ['ignore', 'pipe', 'inherit'],
