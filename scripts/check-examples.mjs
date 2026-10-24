@@ -26,10 +26,10 @@ for (const kind of ['typescript', 'react']) {
   for (const [, name, code] of blocks) await writeFile(join(directory, name), `${code}\n`);
   await writeFile(join(directory, 'package.json'), JSON.stringify({
     private: true, type: 'module', dependencies: {
-      '@groundhogchain/client': kind === 'react' ? '0.11.0' : '0.14.0',
-      '@groundhogchain/protocol': '0.12.0',
+      '@thruputchain/client': kind === 'react' ? '0.22.1' : '0.23.0',
+      '@thruputchain/protocol': '0.18.0',
       ...(kind === 'react' ? {
-        '@groundhogchain/react': '0.3.1', '@tanstack/react-query': '5.103.1',
+        '@thruputchain/react': '0.7.0', '@tanstack/react-query': '5.103.1',
         react: '19.1.1', 'react-dom': '19.1.1',
         '@types/react': '19.1.9', '@types/react-dom': '19.1.7',
       } : {}),
@@ -37,6 +37,8 @@ for (const kind of ['typescript', 'react']) {
       vite: '7.3.6', 'playwright-core': '1.63.0',
     },
   }, null, 2));
+  // Resolve the scope from GitHub Packages, never a similarly named public package.
+  await writeFile(join(directory, '.npmrc'), '@thruputchain:registry=https://npm.pkg.github.com\n');
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: { target: 'ES2022', module: 'ESNext', moduleResolution: 'Bundler',
       strict: true, noEmit: true, skipLibCheck: true, jsx: 'react-jsx',

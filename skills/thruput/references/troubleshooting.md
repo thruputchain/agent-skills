@@ -9,9 +9,9 @@ table describes RPC wire format 11.1.0.
 
 | Symptom | Evidence to collect | Next action |
 | --- | --- | --- |
-| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @groundhogchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup) or [CLI setup](https://docs.thruput.network/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
+| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @thruputchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup) or [CLI setup](https://thruput.network/docs/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
 | Runtime or network descriptor is incompatible | `thruput --version`, `thruput status --json`, `thruput toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
-| Generated binding and client disagree | `npm ls @groundhogchain/client @groundhogchain/protocol @groundhogchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `thruput codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
+| Generated binding and client disagree | `npm ls @thruputchain/client @thruputchain/protocol @thruputchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `thruput codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
 | Submission or observation times out | Original hash, network, signed evidence if saved, error cause and submission cause | Run the inspection procedure below. Keep observing the original hash. A timeout stops observation, not execution; do not sign a replacement automatically. |
 | Transaction committed but execution failed | Receipt, execution result, revert data if present, root wallet method, intended child calls, gas limit and gas used | Fix the reported authorization, balance, storage-funding, or execution-budget condition. Decode the known root first; root abort bytes are not automatically a child exception. A new user-authorized attempt is a new transaction. |
 | Execution succeeded but return decoding failed | Successful receipt, generated binding, deployed spec, and decoder error | Correct the decoder or binding and decode the same receipt again. Do not repeat a successful write to obtain its return value. |
@@ -42,8 +42,7 @@ table describes RPC wire format 11.1.0.
    | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. |
    | `retry` | Inspect the error source and code. Resubmitting the same transaction may succeed; the mempool does not retry it automatically. |
    | `dropped` | Inspect the error source and code. Change the transaction before an authorized resubmission. |
-   | `invalid` | Inspect the reason. Do not hide it behind an automatic new signature. |
-   | `unknown`, `other`, missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
+   | `unknown`, `other`, an unrecognized status (`UnsupportedRpcValue` in the TypeScript client), missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
 
 An indexed committed record takes precedence over scheduler outcomes. A
 `committed` status includes its block height. The receipt may remain unavailable
@@ -53,7 +52,8 @@ For a browser app, call `inspectPending()` from the
 [wallet example](typescript.md#wallet-write-with-recovery). It needs only the
 public client on the original network, so it works after reload or wallet
 disconnect. `waitForTransactionReceipt` can resume polling but does not itself
-require successful execution. Check `receipt.execResult` before showing success.
+require successful execution. Check `receipt.execution.result === "return"`
+before showing success.
 
 ## Resolve an API disagreement
 

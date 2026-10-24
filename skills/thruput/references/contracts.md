@@ -87,10 +87,10 @@ build. Update SDK and interface dependencies together when migrating a project.
 ## Complete Balance example
 
 Start from the maintained
-[ERC-20 contract](https://github.com/groundhogchain/groundhog-examples/tree/main/contracts/erc20)
+[ERC-20 contract](https://github.com/thruputchain/thruput-examples/tree/main/contracts/erc20)
 for a complete Balance-based implementation, including authorization, transfers,
 allowances, events, and tests. The source checked for this skill is
-[revision efb4250](https://github.com/groundhogchain/groundhog-examples/tree/efb425068d16b10fbb25c9bb980115737206a7e6/contracts/erc20),
+[revision efb4250](https://github.com/thruputchain/thruput-examples/tree/efb425068d16b10fbb25c9bb980115737206a7e6/contracts/erc20),
 using the older CLI 0.22.1 dependency set: SDK 0.42.2, standard interfaces
 0.1.44, protocol-rs 0.43.0, and XDR 0.10.2. Treat this as a versioned example;
 check the project's installed APIs before adapting it to newer dependencies.

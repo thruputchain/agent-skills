@@ -2,19 +2,20 @@
 
 ## Read a contract
 
-Verified on 2026-10-05 with the published compatible pair `@groundhogchain/react` 0.3.1
-and `@groundhogchain/client` 0.11.0, with protocol 0.12.0, React/React DOM 19.1.1,
+Verified on 2026-10-24 with the published compatible pair `@thruputchain/react` 0.7.0
+and `@thruputchain/client` 0.22.1, with protocol 0.18.0, React/React DOM 19.1.1,
 and TanStack Query 5.103.1. The exact example passed type checks and local-node
-browser checks for reads, refresh, and errors using CLI 0.22.1.
-The React package requires React 19 and TanStack Query
-5.90.1 or newer within v5. Keep its client peer requirement when installing.
+browser checks for reads, refresh, and errors using CLI 0.37.0.
+The React package requires React 19, TanStack Query 5.90.1 or newer within v5,
+and `@thruputchain/client` `^0.22.1`, which excludes 0.23. Keep its client peer
+requirement when installing rather than overriding it.
 
 In a Vite React TypeScript app, configure
-[GitHub Packages access](https://github.com/groundhogchain/client-ts#registry-auth-one-time-setup)
+[GitHub Packages access](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup)
 and install:
 
 ```sh
-npm install --save-exact @groundhogchain/react@0.3.1 @groundhogchain/client@0.11.0 @groundhogchain/protocol@0.12.0 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
+npm install --save-exact @thruputchain/react@0.7.0 @thruputchain/client@0.22.1 @thruputchain/protocol@0.18.0 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
 ```
 
 Start `thruput node` in another terminal. Keep the app's `<div id="root"></div>`
@@ -34,26 +35,26 @@ cluster instead of `localnet()`.
 
 ```tsx title="main.tsx"
 import { createRoot } from "react-dom/client";
-import { createGroundhogClient, formatUnits, localnet } from "@groundhogchain/client";
-import { ERC20 } from "@groundhogchain/client/contracts";
-import { HOG_ADDRESS } from "@groundhogchain/protocol";
-import { WalletProvider, useContractView } from "@groundhogchain/react";
+import { createThruputClient, formatUnits, localnet } from "@thruputchain/client";
+import { ERC20 } from "@thruputchain/client/contracts";
+import { HOG_ADDRESS } from "@thruputchain/protocol";
+import { WalletProvider, useContractView } from "@thruputchain/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-function HogSupply() {
+function NativeTokenSupply() {
   const supply = useContractView({
     method: ERC20.v0_1.totalSupply,
-    contract: HOG_ADDRESS,
+    address: HOG_ADDRESS,
   });
   return (
     <section>
-      <h1>HOG supply</h1>
+      <h1>Native token supply</h1>
       {supply.isLoading ? <p role="status">Loading supply…</p> : null}
       {supply.error ? <p role="alert">{supply.error.message}</p> : null}
       {supply.data ? (
         <>
-          <p>{formatUnits(supply.data.value, 7)} HOG</p>
-          <p>Read at block {supply.data.height.toString()}</p>
+          <p>{formatUnits(supply.data.value, 7)}</p>
+          <p>Read at block {supply.data.stateBlockHeight.toString()}</p>
         </>
       ) : !supply.isLoading && !supply.error ? <p>No result yet.</p> : null}
       <button disabled={supply.isFetching} onClick={() => void supply.refetch()}>
@@ -68,14 +69,14 @@ if (!element) throw new Error("Missing root element");
 const root = createRoot(element);
 
 async function main() {
-  const client = await createGroundhogClient({
+  const client = await createThruputClient({
     cluster: localnet({ rpcUrl: new URL("/rpc", window.location.origin).href }),
   });
   const queries = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   root.render(
     <QueryClientProvider client={queries}>
       <WalletProvider client={client}>
-        <HogSupply />
+        <NativeTokenSupply />
       </WalletProvider>
     </QueryClientProvider>,
   );
@@ -104,10 +105,10 @@ account, and hash after errors or disconnect; use `useWaitForTransactionReceipt`
 to resume observation without requesting a new signature.
 
 A committed execution failure is receipt data, not a failed query. Inspect
-`execResult`. See the [wallet persistence example](typescript.md#wallet-write-with-recovery)
+`execution.result`. See the [wallet persistence example](typescript.md#wallet-write-with-recovery)
 for the storage and recovery boundary, using the client version selected by this
 React package.
 
-- [Package setup and wallet usage](https://github.com/groundhogchain/react#configure-the-application)
-- [Contract reads and execution guide](https://github.com/groundhogchain/react/blob/main/docs/contract-transactions.md)
-- [React documentation](https://docs.thruput.network/react/)
+- [Package setup and wallet usage](https://github.com/thruputchain/thruput-react#configure-the-application)
+- [Contract reads and execution guide](https://github.com/thruputchain/thruput-react/blob/main/docs/contract-transactions.md)
+- [React documentation](https://thruput.network/docs/react/)

@@ -4,8 +4,9 @@ description: >
   Guides Thruput contract and application development with the installed
   CLI, Rust SDK, generated TypeScript bindings, TypeScript client, wallets,
   local nodes, and JSON-RPC. Use when a task mentions Thruput or a project
-  contains Thruput configuration, generated artifacts, @groundhogchain/*
-  npm packages, or groundhog-* Rust crates.
+  contains Thruput configuration, generated artifacts, @thruputchain/* or
+  legacy @groundhogchain/* npm packages, or thruput-* or legacy groundhog-*
+  Rust crates.
 ---
 
 # Thruput
