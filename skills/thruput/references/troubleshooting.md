@@ -42,8 +42,7 @@ table describes RPC wire format 11.1.0.
    | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. |
    | `retry` | Inspect the error source and code. Resubmitting the same transaction may succeed; the mempool does not retry it automatically. |
    | `dropped` | Inspect the error source and code. Change the transaction before an authorized resubmission. |
-   | `invalid` | Inspect the reason. Do not hide it behind an automatic new signature. |
-   | `unknown`, `other`, missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
+   | `unknown`, `other`, an unrecognized status (`UnsupportedRpcValue` in the TypeScript client), missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
 
 An indexed committed record takes precedence over scheduler outcomes. A
 `committed` status includes its block height. The receipt may remain unavailable
