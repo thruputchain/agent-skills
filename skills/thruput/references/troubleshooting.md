@@ -53,7 +53,8 @@ For a browser app, call `inspectPending()` from the
 [wallet example](typescript.md#wallet-write-with-recovery). It needs only the
 public client on the original network, so it works after reload or wallet
 disconnect. `waitForTransactionReceipt` can resume polling but does not itself
-require successful execution. Check `receipt.execResult` before showing success.
+require successful execution. Check `receipt.execution.result === "return"`
+before showing success.
 
 ## Resolve an API disagreement
 
