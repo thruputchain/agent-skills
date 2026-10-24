@@ -109,7 +109,12 @@ list does not prove that a call failed.
 
 Use `--json` for structured results and `--non-interactive` to disable prompts.
 Non-interactive mode does not grant consent: key generation needs
-`--generate-key`, and protected actions need an explicitly authorized `--force`.
+`--generate-key`, and protected actions need an explicitly authorized `--yes`.
+Without a terminal, `wallet create`, `airdrop`, `deploy`, `call`, `transfer`,
+and `keys export` need it, as do removals and chain restore. CLIs released
+before `--yes` accept only `--force`; newer CLIs keep `--force` as an alias. A
+`confirmation_required` error's `details.requiredFlag` names the flag the
+installed CLI accepts.
 `--quiet` only controls output. Never collect private-key exports in logs.
 
 Use the [diagnostic table](troubleshooting.md) when setup or execution fails.
