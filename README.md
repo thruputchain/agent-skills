@@ -9,7 +9,7 @@ While the repository is private, configure Git credentials, authenticate with
 `gh auth login`, or use an SSH key with repository access.
 
 ```sh
-npx skills add groundhogchain/agent-skills --skill thruput
+npx skills add thruputchain/agent-skills --skill thruput
 ```
 
 Installation is project-local by default. Add `--global` for user-wide access,
