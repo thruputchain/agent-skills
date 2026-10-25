@@ -17,11 +17,11 @@ Gas meters computation. It has no token
 price and is not burned. Choose storage operations for correct conflict
 semantics, not gas-price optimisation.
 
-Declared root gas reserves scheduling capacity against the sender's free HOG;
-target storage funding is separate. Use workload-tested budgets. A sufficient
-first HOG credit can fund a recipient's balance-item deposit; a small first
-credit may fail. Do not hard-code a universal deposit or require an airdrop for
-every new address.
+Declared root gas reserves scheduling capacity against the sender's free native
+tokens; target storage funding is separate. Use workload-tested budgets. A
+sufficient first native token credit can fund a recipient's balance-item
+deposit; a small first credit may fail. Do not hard-code a universal deposit or
+require an airdrop for every new address.
 
 ### Start with Balance, Then Choose by Behaviour
 
@@ -80,9 +80,12 @@ RPC tests against an ephemeral local node. In a multi-contract Cargo workspace,
 Preserve the scaffold's feature names, RV32 binary wrapper, Cargo overlays, and
 self dev-dependency. They are toolchain contracts, not incidental style.
 
-The CLI 0.24.0 scaffold used SDK 0.44.2, standard interfaces 0.1.47,
-protocol-rs 0.46.0, and XDR 0.10.3. Check the generated manifest for the installed
+The CLI 0.39.0 scaffold pins `thruput-sdk` 0.57.0 exactly and the
+`nightly-2026-07-01` toolchain. Check the generated manifest for the installed
 build. Update SDK and interface dependencies together when migrating a project.
+SDK 0.56 renamed the RV32 linker script: change `-Tgroundhog-rv32.ld` to
+`-Tthruput-rv32.ld` in `.cargo/config.toml`. `thruput build` refuses contracts
+built against an SDK older than 0.56; rebuild them.
 
 ## Complete Balance example
 

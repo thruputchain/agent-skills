@@ -50,7 +50,7 @@ the complete installed guide.
   After a timeout, follow [transaction inspection](references/troubleshooting.md#inspect-the-original-transaction).
 - Gas meters computation. It has no token price and
   is not burned. Declared root gas reserves scheduling capacity against free
-  HOG; storage funding is separate.
+  native tokens; storage funding is separate.
 - Never print, log, or paste private signing material. Keep private keys in the
   wallet or designated key store. Persist signed transaction evidence before
   broadcast, as shown in the TypeScript example. Use public
