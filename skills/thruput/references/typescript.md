@@ -10,24 +10,26 @@ keys, and hashes are unprefixed, case-sensitive base58. Signed transactions,
 calldata, return data, and raw event topics stay `0x`-prefixed hex. Select a
 client that supports the target's `wireFormat`.
 
-Pubkey accounts, including hosted schema-3 bootstrap accounts, use DefaultWallet.
-Local schema-4 manifests contain public allocations; applications and harnesses
+Pubkey accounts, including hosted schema-4 bootstrap accounts, use DefaultWallet.
+Local schema-5 manifests contain public allocations; applications and harnesses
 own their signing keys. Preserve historical source-address wallet identities
 when using `devWalletAdapter` rather than deriving replacement addresses.
 
 ## Read a contract
 
-Verified on 2026-10-24 with Node.js 22, `@thruputchain/client` 0.23.0,
-`@thruputchain/protocol` 0.18.0, TypeScript 6.0.3, and tsx 4.22.4.
+Verified on 2026-10-24 with Node.js 22, `@thruputchain/client` 0.24.0,
+`@thruputchain/protocol` 0.19.0, TypeScript 6.0.3, and tsx 4.22.4.
 The exact read and wallet examples passed type checks and local-node execution
-with CLI 0.37.0, including observation failure and reload recovery.
+with CLI 0.39.0, including observation failure and reload recovery.
+Protocol 0.19.0 renames `HOG_ADDRESS` to `NATIVE_TOKEN_ADDRESS`, and client
+0.24.0 renames the `groundhog_erc20_if` binding to `thruput_erc20_if`.
 Configure [GitHub Packages access](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup),
 then create a directory and install:
 
 ```sh
 npm init -y
 npm pkg set type=module
-npm install --save-exact @thruputchain/client@0.23.0 @thruputchain/protocol@0.18.0
+npm install --save-exact @thruputchain/client@0.24.0 @thruputchain/protocol@0.19.0
 npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9.1
 ```
 
@@ -38,13 +40,13 @@ needed. For a hosted network, replace `localnet()` with its configured cluster.
 ```ts title="read.ts"
 import { createThruputClient, localnet, formatUnits } from "@thruputchain/client";
 import { ERC20 } from "@thruputchain/client/contracts";
-import { HOG_ADDRESS } from "@thruputchain/protocol";
+import { NATIVE_TOKEN_ADDRESS } from "@thruputchain/protocol";
 
 async function main() {
   const client = await createThruputClient({ cluster: localnet() });
   const supply = await ERC20.v0_1.totalSupply.view({
     client,
-    address: HOG_ADDRESS,
+    address: NATIVE_TOKEN_ADDRESS,
   });
   console.log("Native token supply:", formatUnits(supply.value, 7));
   console.log("Read at block:", supply.stateBlockHeight.toString());
@@ -58,7 +60,7 @@ main().catch((error: unknown) => {
 
 Run `npx tsx read.ts`. Expect a supply and a read height, not a fixed block number.
 Keep amounts as `bigint`; `formatUnits` is for display. `parseUnits("0.0001", 7)`
-produces `1000n` without rounding. `HOG_ADDRESS` is the native token contract.
+produces `1000n` without rounding. `NATIVE_TOKEN_ADDRESS` is the native token contract.
 
 ## Wallet write with recovery
 
@@ -100,7 +102,7 @@ import {
 import {
   createProviderWalletClient, type PendingWalletTransaction,
 } from "@thruputchain/client/wallet";
-import { HOG_ADDRESS } from "@thruputchain/protocol";
+import { NATIVE_TOKEN_ADDRESS } from "@thruputchain/protocol";
 
 const client = await createThruputClient({
   cluster: localnet({ rpcUrl: new URL("/rpc", window.location.origin).href }),
@@ -137,7 +139,7 @@ export async function sendNativeToken(provider: WalletProvider, receiver: string
     const wallet = createProviderWalletClient({ client, provider, account, networkHash });
     try {
       const invocation = ERC20.v0_1.transfer.invocation(
-        HOG_ADDRESS, gasAmount(500_000n),
+        NATIVE_TOKEN_ADDRESS, gasAmount(500_000n),
         { receiver: recipient, amount: parseUnits("0.0001", 7) },
       );
       const { receipt } = await wallet.executeAndWait(
@@ -229,6 +231,9 @@ after successful execution is not a reason to repeat the write.
 
 - Generated event descriptors provide `filter`, `decode`, `allFromReceipt`, and
   `singleFromReceipt`. Use their codecs rather than manually encoding topics.
+- The native token in hog-devnode 0.1.31-rc.16 emits `thruput-erc20-if` event
+  topics. Filters built from the older `groundhog_erc20_if` descriptors no
+  longer match; use `thruput_erc20_if` from client 0.24.0.
 - Continue an opaque `nextCursor` with the same network, target, and filters.
   Stop when `nextCursor` is `null`, not on an empty page.
 - Save event rows and progress together. For ascending ingestion, restart at the

@@ -3,7 +3,7 @@
 Record the command, exit code, exact error, selected network, CLI version, and
 relevant dependency versions. Include public addresses and hashes, but redact
 tokens and private keys. Commands below use the Thruput CLI; the status
-table describes RPC wire format 11.1.0.
+table describes RPC wire format 14.1.1.
 
 ## Diagnose the symptom
 
