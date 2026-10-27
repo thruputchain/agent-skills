@@ -9,7 +9,7 @@ table describes RPC wire format 14.1.1.
 
 | Symptom | Evidence to collect | Next action |
 | --- | --- | --- |
-| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @thruputchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup) or [CLI setup](https://thruput.network/docs/get-started/cli/). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
+| npm or Cargo registry authentication fails | Registry hostname, HTTP status, package name/version; `npm config get @thruputchain:registry` for npm; the registry URL selected by Cargo | Configure credentials for that registry using [client setup](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup) or [Configure Cargo access](https://thruput.network/docs/cli/install/#configure-cargo-access). Confirm package access. Do not print credential files or replace private dependencies with similarly named public packages. |
 | Runtime or network descriptor is incompatible | `thruput --version`, `thruput status --json`, `thruput toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
 | Generated binding and client disagree | `npm ls @thruputchain/client @thruputchain/protocol @thruputchain/react`; CLI version; compiler error; `.spec.xdr` from the deployed build | Install compatible dependencies and regenerate with `thruput codegen ts CONTRACT.spec.xdr -o src/contract.ts`. Do not edit generated types or suppress peer errors. Use the [read example](typescript.md#read-a-contract) as a baseline. |
 | Submission or observation times out | Original hash, network, signed evidence if saved, error cause and submission cause | Run the inspection procedure below. Keep observing the original hash. A timeout stops observation, not execution; do not sign a replacement automatically. |
@@ -39,7 +39,7 @@ table describes RPC wire format 14.1.1.
    | `pending` | Keep the hash and repeat the read-only lookup later. |
    | `committed` with successful execution | Record the receipt height and refresh application reads. |
    | `committed` with failed execution | Keep the receipt and diagnose its execution result. |
-   | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. |
+   | `recentFailure` | Treat it as an advisory attempt result; the transaction may still commit. It can also appear as a `recentFailure` field on `pending`, `retry`, or `dropped`, and may describe an earlier attempt. |
    | `retry` | Inspect the error source and code. Resubmitting the same transaction may succeed; the mempool does not retry it automatically. |
    | `dropped` | Inspect the error source and code. Change the transaction before an authorized resubmission. |
    | `unknown`, `other`, an unrecognized status (`UnsupportedRpcValue` in the TypeScript client), missing receipt, or lookup error | The outcome is unresolved. Check endpoint identity and availability, preserve evidence, and inspect again. |
@@ -52,8 +52,8 @@ For a browser app, call `inspectPending()` from the
 [wallet example](typescript.md#wallet-write-with-recovery). It needs only the
 public client on the original network, so it works after reload or wallet
 disconnect. `waitForTransactionReceipt` can resume polling but does not itself
-require successful execution. Check `receipt.execution.result === "return"`
-before showing success.
+require successful execution. Before showing success, narrow away
+`UnsupportedRpcValue` and check that `receipt.execution.result === "return"`.
 
 ## Resolve an API disagreement
 

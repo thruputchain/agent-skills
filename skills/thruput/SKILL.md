@@ -38,8 +38,12 @@ Use the dependencies and network selected by the project.
 | Errors, version disagreements, uncertain submissions | [Troubleshooting](references/troubleshooting.md) | `thruput skill show troubleshooting` |
 | Porting a Soroban contract | [Soroban](references/soroban.md) | `thruput skill show soroban` |
 
-Read references as needed. Use `thruput skill show --all` when you need
-the complete installed guide.
+Read references as needed. `thruput skill list` lists the installed
+references, and `thruput skill show <topic>` prints one. No option prints every
+file. `thruput skill show` reads `.agents/skills/thruput` in the current
+directory, then in your home directory, and does not search parent directories.
+Run it from the directory where the project skill is installed, or add
+`--global`.
 
 ## Shared rules
 
@@ -49,6 +53,10 @@ the complete installed guide.
   invocation. Use the public client or CLI to prepare and submit transactions.
 - Submission, commitment, and successful execution are different states.
   After a timeout, follow [transaction inspection](references/troubleshooting.md#inspect-the-original-transaction).
+- Exchange and store addresses as base58. RPC responses, CLI JSON reports, and
+  wallet sessions use base58. CLI 0.40.1 and later also accept a Thruput `Z`
+  StrKey and reject Stellar `C` addresses. A `G` key identifies a signer, not an
+  account address.
 - Gas meters computation. It has no token price and
   is not burned. Declared root gas reserves scheduling capacity against free
   native tokens; storage funding is separate.
@@ -59,7 +67,7 @@ the complete installed guide.
 
 ## Documentation and versions
 
-Start at <https://docs.thruput.network/> for product documentation. The installed
+Start at <https://thruput.network/docs/> for product documentation. The installed
 CLI's `thruput docs` serves its selected documentation snapshot locally.
 
 The installed skill follows the latest maintained source independently of CLI

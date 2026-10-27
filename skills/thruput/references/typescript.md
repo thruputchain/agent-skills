@@ -10,6 +10,11 @@ keys, and hashes are unprefixed, case-sensitive base58. Signed transactions,
 calldata, return data, and raw event topics stay `0x`-prefixed hex. Select a
 client that supports the target's `wireFormat`.
 
+Exchange and store addresses as base58. With client 0.24.0, `parseAddress` also
+accepts a `C` StrKey and `addressToStrkey` produces one, but CLI 0.40.1 and later
+accept only base58 or a Thruput `Z` StrKey. Do not display or store `C`
+StrKeys.
+
 Pubkey accounts, including hosted schema-4 bootstrap accounts, use DefaultWallet.
 Local schema-5 manifests contain public allocations; applications and harnesses
 own their signing keys. Preserve historical source-address wallet identities
@@ -20,9 +25,21 @@ when using `devWalletAdapter` rather than deriving replacement addresses.
 Verified on 2026-10-24 with Node.js 22, `@thruputchain/client` 0.24.0,
 `@thruputchain/protocol` 0.19.0, TypeScript 6.0.3, and tsx 4.22.4.
 The exact read and wallet examples passed type checks and local-node execution
-with CLI 0.39.0, including observation failure and reload recovery.
-Protocol 0.19.0 renames `HOG_ADDRESS` to `NATIVE_TOKEN_ADDRESS`, and client
-0.24.0 renames the `groundhog_erc20_if` binding to `thruput_erc20_if`.
+with CLI 0.39.0, including observation failure and reload recovery. CLI 0.40.2
+serves the same wire format with the same local runtime.
+
+These renames keep no alias. Use the names your installed versions export:
+
+| Version | Old name | New name |
+| --- | --- | --- |
+| protocol 0.19.0 | `HOG_ADDRESS` | `NATIVE_TOKEN_ADDRESS` |
+| client 0.23.0 | `PrivateKeySigner` | `Ed25519Signer` (use `Ed25519Signer.fromSeed(seed)`) |
+| client 0.24.0 | `groundhog_erc20_if` | `thruput_erc20_if` |
+
+The CLI 0.40.2 counter-app template still pins client 0.22.0 and protocol
+0.18.0. Use the older names there, or upgrade the project deliberately. Client
+0.22.x event descriptors do not match native-token events on the current local
+runtime.
 Configure [GitHub Packages access](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup),
 then create a directory and install:
 
@@ -35,7 +52,10 @@ npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9
 
 Start `thruput node` in another terminal. This example reads the native token
 contract on the local network; no wallet, private key, or contract deployment is
-needed. For a hosted network, replace `localnet()` with its configured cluster.
+needed. For Futurenet, replace `localnet()` with `devnet()` (client 0.24.0;
+endpoint `https://rpc.thruput.network`). Pin a deployment with
+`devnet({ networkHash })`. Docs that use `futurenet()` target the next client
+release.
 
 ```ts title="read.ts"
 import { createThruputClient, localnet, formatUnits } from "@thruputchain/client";
@@ -202,9 +222,10 @@ invalidates the adapter; it never selects another signer automatically.
 
 On `unobserved`, keep the record and call `inspectPending()` later, including
 after reload. If inspection fails, retain the record and show the error. Do not
-call `sendNativeToken` again to recover it. Check `receipt.execution.result ===
-"return"` before showing success: a committed receipt can describe an `abort`
-or failed execution. An unresolved or corrupt saved record blocks new transfers
+call `sendNativeToken` again to recover it. Before showing success, check
+`!(receipt.execution instanceof UnsupportedRpcValue) &&
+receipt.execution.result === "return"`. A committed receipt can describe an
+`abort`, a `fault`, or an outcome this client does not recognize. An unresolved or corrupt saved record blocks new transfers
 rather than silently discarding evidence.
 
 The gas values are budgets for this example, not universal defaults. Gas has no
@@ -217,6 +238,10 @@ deposits.
 thruput build --bindings ts
 thruput codegen ts target/thruput/my_contract.spec.xdr -o src/my-contract.ts
 ```
+
+`thruput build --bindings ts` also writes `target/thruput/<name>.ts` and reports
+it as `bindingsTs` in JSON output. `codegen` writes the bindings into your
+source tree.
 
 Use the `.spec.xdr` from the deployed build. Regenerate after interface changes;
 do not edit the generated file or maintain a second ABI. Select an interface
