@@ -36,6 +36,7 @@ Use the dependencies and network selected by the project.
 | React application state and reads | [React](references/react.md) | `thruput skill show react` |
 | CLI setup, keys, wallets, deployment, local nodes | [CLI](references/cli.md) | `thruput skill show cli` |
 | Errors, version disagreements, uncertain submissions | [Troubleshooting](references/troubleshooting.md) | `thruput skill show troubleshooting` |
+| Porting a Soroban contract | [Soroban](references/soroban.md) | `thruput skill show soroban` |
 
 Read references as needed. Use `thruput skill show --all` when you need
 the complete installed guide.
