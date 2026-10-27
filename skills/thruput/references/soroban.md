@@ -18,14 +18,20 @@ behavior. It does not make Soroban clients or Wasm run on Thruput.
 | `stellar contract build` (Wasm) | `thruput build` (RV32 artifact and contract spec) |
 | `__constructor` | An initializer with a contract-defined guard, run with `deploy --init` and an explicit `--fund` amount |
 | `#[contracterror]`, `Result<T, E>` returns | `#[contract_exception]`; exported methods throw |
-| `#[contractevent]`, `env.events().publish` | Declared typed events and `log_event`; topic 0 is the event signature |
+| `#[contractevent]`, `env.events().publish` | Declared typed events and `log_event`; topic 0 is the event signature, plus up to two topic fields; string and byte topics are hashed |
 | `env.ledger().timestamp()` (seconds) / `sequence()` | `get_block_timepoint()` (Unix nanoseconds, fixed per block) / `get_block_height()` |
 | `Address`, `#[contracttype]` | `ContractAddress`, `#[contract_type]` |
 | `env.current_contract_address()` | `get_current_address()` |
+| `stellar contract invoke`, sent or simulated | `thruput call` submits a transaction; `thruput view` simulates against committed state |
 | `contractimport!` client | Generated Rust client; `try_*` returns `CallError` |
 | `update_current_contract_wasm` | No upgrade in place; deploy a new contract |
 | Instance and Persistent storage | Contract storage fields and typed handles (`Value`, `Map`, `Balance`) |
 | Temporary storage, `extend_ttl` | No TTL; data stays until deleted |
+
+Use CLI 0.40.1 or later. Address inputs take base58 or a Thruput `Z` StrKey;
+Stellar `C` addresses are rejected. A `G` key identifies a signer, not a
+Thruput account. Copy addresses from the tools rather than converting Stellar
+addresses.
 
 Use the generated compiler settings and dependency pins. The generated release
 profile sets `overflow-checks = false`. Soroban examples set `true`. Where the
@@ -37,7 +43,8 @@ the RV32 guest as well.
 
 Find whose authority each operation needs and how that authority reaches the
 contract. `get_caller()` is the immediate caller. It is not the same as
-`require_auth()`.
+`require_auth()`. Signing the root transaction does not grant downstream
+authority, and the root frame itself has no caller.
 
 | Source pattern | Port decision |
 | --- | --- |
@@ -57,7 +64,8 @@ payload against the owner, recipient, amount, and other policy.
 
 - A contract pays the storage deposits for data under its address. The
   submitter does not. Find every entry a caller can create (balances,
-  allowances, per-user records). Decide who may create entries. Fund the
+  allowances, per-user records). Decide who may create entries. Consider
+refusing writes that only allocate, such as a zero approval for a new pair. Fund the
   contract at deployment with `--fund`. A write the contract cannot fund is
   excluded, not aborted. Sponsored transactions are planned but not available.
 - Store deadlines explicitly and check them on read. If the source extended a

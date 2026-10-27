@@ -1,7 +1,7 @@
 # CLI
 
-CLI 0.39.0 serves RPC wire format 14.1.1 and reads schema-5 local runtime
-manifests. Run `thruput --version` and the command's `--help` to check the
+CLI 0.40.2 serves RPC wire format 14.1.1 and reads schema-5 local runtime
+manifests. Hosted manifests use schema 4. Run `thruput --version` and the command's `--help` to check the
 installed build; these contracts can change independently of the CLI package
 version.
 
@@ -17,11 +17,25 @@ thruput test
 ```
 
 `init` initializes global profiles and checks for Cargo and a selected signing
-key. Interactive sessions offer key generation and project scaffolding. It does
-not configure Cargo registry access. If `status` reports `no_registry`, the
-Cargo config has no `[registries.thruput]` section: add it first, then run
-`cargo login --registry thruput` for credentials. `status --json` inspects setup without
-changing it. Keep the generated Cargo configuration and RV32 wrapper.
+key. Interactive sessions offer key generation and project scaffolding.
+Generated projects declare the Thruput Cargo registry in `.cargo/config.toml`,
+so a `no_registry` finding from `status` is informational. If Cargo cannot
+download Thruput crates, configure access as in
+[Configure Cargo access](https://thruput.network/docs/cli/install/#configure-cargo-access).
+`status --json`
+inspects setup without changing it. Keep the generated Cargo configuration and
+RV32 wrapper.
+
+`init` creates a `local` profile, the initial default, and a `futurenet` profile
+for the hosted network. To work on Futurenet, run `thruput config use futurenet`
+outside a project; new projects follow the global default. Profile precedence
+is `--profile`, then `THRUPUT_PROFILE`, then the project `default_profile`, then
+the global `default_profile`. `devnet` is a legacy name; use `futurenet`. Check
+the result with `thruput config get --sources`.
+
+For a project scaffolded before CLI 0.40.0, rebuild against SDK 0.56 or later.
+Change `-Tgroundhog-rv32.ld` to `-Tthruput-rv32.ld` in `.cargo/config.toml`.
+Update event filters from `groundhog-erc20-if` to `thruput-erc20-if` topics.
 
 `init` records the native token contract under the alias `NATIVE_TOKEN`.
 CLIs before 0.39.0 wrote `HOG`. That alias still resolves but is no longer
@@ -34,7 +48,7 @@ runtime build. A compatibility error needs diagnosis, not a protocol override.
 
 An ephemeral node loses state when restarted. Pass `--data-dir DIR` when the
 application needs its deployments across restarts. Read the
-[local-node guide](https://docs.thruput.network/cli/local-node/).
+[local-node guide](https://thruput.network/docs/cli/local-node/).
 
 Local accounts use ordinary stored keys. On a fresh chain, `thruput node`
 gives the selected Ed25519 key's nonce-zero native account an initial
@@ -51,7 +65,9 @@ Harnesses retain their own fixture signers and pass public allocations through
 chain state and dumps retain the private faucet and its funding journal; older
 local state requires its original runtime and CLI. Hosted schema-4 runtime
 manifests keep a separate deterministic bootstrap derivation; it does not apply
-to local accounts.
+to local accounts. Since CLI 0.40.1 the default hosted dev-account derivation
+uses `thruput-dev-accounts`, so earlier derived signers differ. Explicit
+manifest seeds remain authoritative.
 
 For uncertain local funding, retain the original recipient, amount, and request
 nonce. Retry the same request rather than creating a second funding operation.
@@ -62,6 +78,11 @@ Inspect any reported transaction hash on the original network.
 Keep private keys in the CLI key store. `thruput keys import <name>` accepts a
 seed through hidden input or stdin, not a command-line argument. A public key is
 not a wallet address; inspect the selected account with the wallet commands.
+
+Address arguments accept base58 or a checksummed Thruput `Z` StrKey (CLI 0.40.1
+and later). Stellar `C` addresses are rejected. JSON reports and saved
+configuration use base58. A `Z` address does not identify a network, so select
+the profile explicitly. `S` seeds are accepted only by `keys import`.
 
 Wallet creation, selection, address inspection, and status ownership checks use
 cached public metadata without loading the private signer. Older key files may
@@ -84,7 +105,9 @@ implicitly become the view caller.
 Use `thruput deploy --help` for the artifact argument and network options.
 Use `--estimate` to inspect deployment storage funding without signing or
 submitting. Deploy with an explicit `--fund <AMOUNT|minimum>` amount in native
-tokens; zero skips the transfer.
+tokens; zero skips the transfer. `--fund minimum` cannot be combined with
+`--init`, because the estimate excludes initializer storage. Use `--estimate`,
+then pass an explicit amount.
 
 Add `--init <METHOD>` and repeated `--init-arg <VALUE>` to initialize atomically
 with funding and deployment. The contract spec supplies argument types.
@@ -124,8 +147,10 @@ Use `--json` for structured results and `--non-interactive` to disable prompts.
 Non-interactive mode does not grant consent: key generation needs
 `--generate-key`, and protected actions need an explicitly authorized `--yes`.
 Without a terminal, `wallet create`, `airdrop`, `deploy`, `call`, `transfer`,
-and `keys export` need it, as do removals and chain restore. CLIs released
-before `--yes` accept only `--force`; newer CLIs keep `--force` as an alias. A
+and `keys export` need it, as do removals and chain restore. CLIs before
+0.38.0 accept only `--force`. Later write commands keep `--force` as an alias,
+except `thruput skill install` and `skill update`, which take only `--yes`.
+Unattended skill installation also needs `--agent <id>`. A
 `confirmation_required` error's `details.requiredFlag` names the flag the
 installed CLI accepts.
 `--quiet` only controls output. Never collect private-key exports in logs.

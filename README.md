@@ -8,18 +8,33 @@ Requires Node.js 22.20 or newer, npm, Git, and access to this repository.
 While the repository is private, configure Git credentials, authenticate with
 `gh auth login`, or use an SSH key with repository access.
 
-```sh
-npx skills add thruputchain/agent-skills --skill thruput
-```
-
-Installation is project-local by default. Add `--global` for user-wide access,
-or `--agent opencode` to select an agent. For unattended installation, select
-the agent and add `--yes` explicitly.
+Install with the Thruput CLI. `thruput skill show` and `thruput skill list` read
+`.agents/skills/thruput`. When you select agents with `--agent`, the CLI also
+selects the `universal` agent so that this copy exists:
 
 ```sh
-npx skills update thruput --project
-npx skills update thruput --global
+thruput skill install
+thruput skill install --global --agent claude-code
 ```
+
+Installation is project-local by default. Add `--global` for user-wide access.
+Repeat `--agent` to select more agents. For unattended installation, pass the
+agent and `--yes` explicitly. Update in the same scope:
+
+```sh
+thruput skill update
+thruput skill update --global
+```
+
+To install without the CLI, include the `universal` agent so that the
+`.agents/skills/thruput` copy exists:
+
+```sh
+npx skills@1.7.0 add thruputchain/agent-skills --skill thruput --agent <id> --agent universal
+```
+
+For a direct global refresh, rerun that `add` command with `--global --yes`.
+`npx skills update --global` can exit successfully after a failed source check.
 
 The installed skill follows this repository. The Thruput CLI reads the installed skill. Skill updates are independent of
 CLI releases. Use the project's dependency
