@@ -18,13 +18,10 @@ thruput test
 
 `init` initializes global profiles and checks for Cargo and a selected signing
 key. Interactive sessions offer key generation and project scaffolding.
-Generated projects declare the Thruput Cargo registry in `.cargo/config.toml`,
-so a `no_registry` finding from `status` is informational. If Cargo cannot
-download Thruput crates, configure access as in
-[Configure Cargo access](https://thruput.network/docs/cli/install/#configure-cargo-access).
-`status --json`
-inspects setup without changing it. Keep the generated Cargo configuration and
-RV32 wrapper.
+Current CLI releases use public crates.io packages. See
+[CLI installation](https://www.thruput.network/docs/cli/install/) for setup.
+`status --json` inspects setup without changing it. Keep the generated Cargo
+configuration and RV32 wrapper.
 
 `init` creates a `local` profile, the initial default, and a `futurenet` profile
 for the hosted network. To work on Futurenet, run `thruput config use futurenet`
@@ -117,6 +114,20 @@ failure rolls back the operation. A dry run submits nothing.
 Keep the original hash and predicted address if confirmation fails. Follow
 [transaction inspection](troubleshooting.md#inspect-the-original-transaction)
 before creating another deployment.
+
+## Inspect a contract
+
+```sh
+thruput inspect CONTRACT_ADDRESS --profile local
+thruput inspect CONTRACT_ADDRESS --profile local --json
+```
+
+An address or saved alias selects the deployment. Inspection reads and verifies
+the deployed artifact without a local build or signing key. Add
+`--output contract.spec.json` to export a supported embedded spec, replacing the
+file if it exists. Native contracts have no embedded RV32 spec.
+
+For TypeScript bindings, see [code generation](typescript.md#generate-bindings-for-your-own-contract).
 
 ## Inspect transactions and events
 

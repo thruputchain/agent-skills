@@ -2,19 +2,17 @@
 
 ## Read a contract
 
-Use the published set `@thruputchain/react` 0.8.0, `@thruputchain/client`
-0.24.0, and protocol 0.19.0, with React/React DOM 19.1.1 and TanStack Query
-5.103.1. The example below type-checks against that set. Its local-node browser
-checks last ran with React 0.7.0 and CLI 0.37.0. React 0.8.0 requires React 19,
-TanStack Query 5.90.1 or newer within v5, and `@thruputchain/client` `^0.24.0`.
+Use the public npm packages `@thruputchain/react` 0.9.0, `@thruputchain/client`
+0.25.0, and protocol 0.19.1, with React/React DOM 19.1.1 and TanStack Query
+5.103.1. React 0.9.0 requires React 19, TanStack Query 5.90.1 or newer within v5,
+and `@thruputchain/client` `^0.25.0`.
 Keep its client peer requirement when installing rather than overriding it.
+Type checks and local-node browser checks passed with CLI 0.41.1 on 2026-11-05.
 
-In a Vite React TypeScript app, configure
-[GitHub Packages access](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup)
-and install:
+In a Vite React TypeScript app, install:
 
 ```sh
-npm install --save-exact @thruputchain/react@0.8.0 @thruputchain/client@0.24.0 @thruputchain/protocol@0.19.0 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
+npm install --save-exact @thruputchain/react@0.9.0 @thruputchain/client@0.25.0 @thruputchain/protocol@0.19.1 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
 ```
 
 Start `thruput node` in another terminal. Keep the app's `<div id="root"></div>`
