@@ -22,11 +22,8 @@ when using `devWalletAdapter` rather than deriving replacement addresses.
 
 ## Read a contract
 
-Verified on 2026-10-24 with Node.js 22, `@thruputchain/client` 0.24.0,
-`@thruputchain/protocol` 0.19.0, TypeScript 6.0.3, and tsx 4.22.4.
-The exact read and wallet examples passed type checks and local-node execution
-with CLI 0.39.0, including observation failure and reload recovery. CLI 0.40.2
-serves the same wire format with the same local runtime.
+Use the project's installed dependencies and check their exported APIs before
+adapting an example. Use a Node.js release supported by those packages.
 
 These renames keep no alias. Use the names your installed versions export:
 
@@ -36,26 +33,21 @@ These renames keep no alias. Use the names your installed versions export:
 | client 0.23.0 | `PrivateKeySigner` | `Ed25519Signer` (use `Ed25519Signer.fromSeed(seed)`) |
 | client 0.24.0 | `groundhog_erc20_if` | `thruput_erc20_if` |
 
-The CLI 0.40.2 counter-app template still pins client 0.22.0 and protocol
-0.18.0. Use the older names there, or upgrade the project deliberately. Client
-0.22.x event descriptors do not match native-token events on the current local
-runtime.
-Configure [GitHub Packages access](https://github.com/thruputchain/thruput-sdk-ts#registry-auth-one-time-setup),
-then create a directory and install:
+For a new project, create a directory and install from the public npm registry.
+`--save-exact` records the resolved versions; commit the lockfile:
 
 ```sh
 npm init -y
 npm pkg set type=module
-npm install --save-exact @thruputchain/client@0.24.0 @thruputchain/protocol@0.19.0
-npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9.1
+npm install --save-exact @thruputchain/client @thruputchain/protocol
+npm install --save-dev --save-exact typescript tsx @types/node
 ```
 
 Start `thruput node` in another terminal. This example reads the native token
 contract on the local network; no wallet, private key, or contract deployment is
-needed. For Futurenet, replace `localnet()` with `devnet()` (client 0.24.0;
-endpoint `https://rpc.thruput.network`). Pin a deployment with
-`devnet({ networkHash })`. Docs that use `futurenet()` target the next client
-release.
+needed. For Futurenet, replace `localnet()` with `futurenet()` (endpoint
+`https://rpc.thruput.network`). Pin a deployment with `futurenet({ networkHash })`.
+Older clients export this helper as `devnet()`.
 
 ```ts title="read.ts"
 import { createThruputClient, localnet, formatUnits } from "@thruputchain/client";
@@ -237,13 +229,20 @@ deposits.
 ```sh
 thruput build --bindings ts
 thruput codegen ts target/thruput/my_contract.spec.xdr -o src/my-contract.ts
+thruput codegen ts target/thruput/my_contract.rv32a -o src/my-contract.ts
+thruput codegen ts --address CONTRACT_ADDRESS --profile local -o src/my-contract.ts
 ```
 
 `thruput build --bindings ts` also writes `target/thruput/<name>.ts` and reports
 it as `bindingsTs` in JSON output. `codegen` writes the bindings into your
 source tree.
 
-Use the `.spec.xdr` from the deployed build. Regenerate after interface changes;
+Provide exactly one file or `--address`. Address-based generation retrieves and
+verifies the deployed artifact; it requires a supported embedded spec. The
+`.spec.xdr` and `.spec.json` files are exports of that spec. JSON is not a codegen
+input. Retrieval or validation errors leave an existing output file unchanged.
+
+Use the spec from the deployed build. Regenerate after interface changes;
 do not edit the generated file or maintain a second ABI. Select an interface
 version such as `Counter.v0_1`. Use its `view` for reads and `invocation` for
 wallet execution. `getContract` can bind a descriptor, address, and client once.
@@ -251,6 +250,19 @@ wallet execution. `getContract` can bind a descriptor, address, and client once.
 Use `executeCallsAndWait` when typed child return values are needed. Root receipt
 bytes belong to the wallet, not directly to its child contract. A decoding failure
 after successful execution is not a reason to repeat the write.
+
+## Discover a deployed spec
+
+For runtime inspection, use `getContractSpec(rpcClient, { address })` from
+`@thruputchain/client/actions` with a release that exports it. A supported spec
+has `artifactSpec.kind: "spec"` and its decoded value in `artifactSpec.spec`.
+Use the codec and decoder helpers in `@thruputchain/client/contract` for dynamic
+decoding. Generated bindings remain the typed application interface.
+
+No deployment returns `deployment: null` and `artifactSpec: null`. Native,
+absent, and unsupported specs have distinct results; unavailable or malformed
+artifacts throw. Current metadata does not identify historical code, and
+decoded child requests do not prove child execution or outcomes.
 
 ## Events and transport
 

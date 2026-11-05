@@ -71,5 +71,6 @@ Start at <https://thruput.network/docs/> for product documentation. The installe
 CLI's `thruput docs` serves its selected documentation snapshot locally.
 
 The installed skill follows the latest maintained source independently of CLI
-releases. The project's installed API remains the authority. Each example names its dependency set. Start from that complete
-example, then check the project's installed declarations if its versions differ.
+releases. The project's installed API remains the authority. Check its manifests,
+lockfiles, exported declarations, and peer requirements before adapting examples.
+Keep existing dependency versions unless the task requires an upgrade.
