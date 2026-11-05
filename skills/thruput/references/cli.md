@@ -1,9 +1,8 @@
 # CLI
 
-CLI 0.40.2 serves RPC wire format 14.1.1 and reads schema-5 local runtime
-manifests. Hosted manifests use schema 4. Run `thruput --version` and the command's `--help` to check the
-installed build; these contracts can change independently of the CLI package
-version.
+Run `thruput --version` and the command's `--help` to check the installed build.
+RPC wire versions and runtime manifest schemas can change independently of the
+CLI package version.
 
 ## Local development
 

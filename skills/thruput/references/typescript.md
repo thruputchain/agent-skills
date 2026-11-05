@@ -22,10 +22,8 @@ when using `devWalletAdapter` rather than deriving replacement addresses.
 
 ## Read a contract
 
-Use Node.js 22, `@thruputchain/client` 0.25.0,
-`@thruputchain/protocol` 0.19.1, TypeScript 6.0.3, and tsx 4.22.4.
-The read and wallet examples passed type checks and local-node checks with
-CLI 0.41.1 on 2026-11-05.
+Use the project's installed dependencies and check their exported APIs before
+adapting an example. Use a Node.js release supported by those packages.
 
 These renames keep no alias. Use the names your installed versions export:
 
@@ -35,25 +33,21 @@ These renames keep no alias. Use the names your installed versions export:
 | client 0.23.0 | `PrivateKeySigner` | `Ed25519Signer` (use `Ed25519Signer.fromSeed(seed)`) |
 | client 0.24.0 | `groundhog_erc20_if` | `thruput_erc20_if` |
 
-The CLI 0.40.2 counter-app template still pins client 0.22.0 and protocol
-0.18.0. Use the older names there, or upgrade the project deliberately. Client
-0.22.x event descriptors do not match native-token events on the current local
-runtime.
-Create a directory and install from the public npm registry:
+For a new project, create a directory and install from the public npm registry.
+`--save-exact` records the resolved versions; commit the lockfile:
 
 ```sh
 npm init -y
 npm pkg set type=module
-npm install --save-exact @thruputchain/client@0.25.0 @thruputchain/protocol@0.19.1
-npm install --save-dev --save-exact typescript@6.0.3 tsx@4.22.4 @types/node@25.9.1
+npm install --save-exact @thruputchain/client @thruputchain/protocol
+npm install --save-dev --save-exact typescript tsx @types/node
 ```
 
 Start `thruput node` in another terminal. This example reads the native token
 contract on the local network; no wallet, private key, or contract deployment is
-needed. For Futurenet, replace `localnet()` with `devnet()` (client 0.24.0;
-endpoint `https://rpc.thruput.network`). Pin a deployment with
-`devnet({ networkHash })`. Docs that use `futurenet()` target the next client
-release.
+needed. For Futurenet, replace `localnet()` with `futurenet()` (endpoint
+`https://rpc.thruput.network`). Pin a deployment with `futurenet({ networkHash })`.
+Older clients export this helper as `devnet()`.
 
 ```ts title="read.ts"
 import { createThruputClient, localnet, formatUnits } from "@thruputchain/client";

@@ -2,17 +2,14 @@
 
 ## Read a contract
 
-Use the public npm packages `@thruputchain/react` 0.9.0, `@thruputchain/client`
-0.25.0, and protocol 0.19.1, with React/React DOM 19.1.1 and TanStack Query
-5.103.1. React 0.9.0 requires React 19, TanStack Query 5.90.1 or newer within v5,
-and `@thruputchain/client` `^0.25.0`.
-Keep its client peer requirement when installing rather than overriding it.
-Type checks and local-node browser checks passed with CLI 0.41.1 on 2026-11-05.
+Use the project's installed packages and check their exported APIs. Keep the
+React SDK's peer requirements for React, TanStack Query, and the Thruput client
+rather than overriding them.
 
 In a Vite React TypeScript app, install:
 
 ```sh
-npm install --save-exact @thruputchain/react@0.9.0 @thruputchain/client@0.25.0 @thruputchain/protocol@0.19.1 @tanstack/react-query@5.103.1 react@19.1.1 react-dom@19.1.1
+npm install --save-exact @thruputchain/react @thruputchain/client @thruputchain/protocol @tanstack/react-query react react-dom
 ```
 
 Start `thruput node` in another terminal. Keep the app's `<div id="root"></div>`

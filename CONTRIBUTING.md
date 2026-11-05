@@ -22,7 +22,11 @@ This requires Node.js 22, public npm access, a CLI with its compatible managed
 runtime, Chromium, and a free local port 9545. Set `CHROMIUM_PATH` if Chromium
 is not at `/usr/bin/chromium`.
 
-The script installs the documented packages in temporary consumers, checks
+The script owns the pinned dependency set for reproducible checks. Keep exact
+versions and test dates out of skill prose unless they explain a compatibility
+boundary. Record validation results in the PR.
+
+The script installs those packages in temporary consumers, checks
 types, and runs the extracted examples against isolated local nodes. It prints
 the directory containing the examples and dependency lockfiles. Wallet checks
 use a controlled provider with real transactions; no browser extension is needed.
