@@ -26,10 +26,11 @@ for (const kind of ['typescript', 'react']) {
   for (const [, name, code] of blocks) await writeFile(join(directory, name), `${code}\n`);
   await writeFile(join(directory, 'package.json'), JSON.stringify({
     private: true, type: 'module', dependencies: {
-      '@thruputchain/client': '0.24.0',
-      '@thruputchain/protocol': '0.19.0',
+      // React SDK 0.9.0 peers on client ^0.25.0; keep that pair until React is released.
+      '@thruputchain/client': kind === 'react' ? '0.25.0' : '0.26.0',
+      '@thruputchain/protocol': kind === 'react' ? '0.19.1' : '0.20.0',
       ...(kind === 'react' ? {
-        '@thruputchain/react': '0.8.0', '@tanstack/react-query': '5.103.1',
+        '@thruputchain/react': '0.9.0', '@tanstack/react-query': '5.103.1',
         react: '19.1.1', 'react-dom': '19.1.1',
         '@types/react': '19.1.9', '@types/react-dom': '19.1.7',
       } : {}),
@@ -37,8 +38,7 @@ for (const kind of ['typescript', 'react']) {
       vite: '7.3.6', 'playwright-core': '1.63.0',
     },
   }, null, 2));
-  // Resolve the scope from GitHub Packages, never a similarly named public package.
-  await writeFile(join(directory, '.npmrc'), '@thruputchain:registry=https://npm.pkg.github.com\n');
+  await writeFile(join(directory, '.npmrc'), '@thruputchain:registry=https://registry.npmjs.org\n');
   await writeFile(join(directory, 'tsconfig.json'), JSON.stringify({
     compilerOptions: { target: 'ES2022', module: 'ESNext', moduleResolution: 'Bundler',
       strict: true, noEmit: true, skipLibCheck: true, jsx: 'react-jsx',

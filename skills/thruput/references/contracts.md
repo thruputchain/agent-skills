@@ -57,7 +57,7 @@ genuinely needs its lower-level signed-delta or explicit-base operations.
 - `Bytestring` is raw byte storage for lower-level or infrequently replaced
   data. Prefer typed `Value<T>` when a typed value is available.
 - `RCQ<T>` is the SDK's retrocausal queue for concurrent request insertion and
-  ordered processing. Use the [AMM guide](https://thruput.network/docs/guides/build-an-amm/)
+  ordered processing. Use the [AMM guide](https://www.thruput.network/docs/guides/build-an-amm/)
   for a complete queued application rather than assuming ordinary map semantics.
 
 For a token, use `Map<ContractAddress, Balance>` for per-account balances. For
@@ -111,10 +111,9 @@ self dev-dependency. They are toolchain contracts, not incidental style:
 - If you rename the package, rename the `[[bin]]` target and the `extern crate`
   in `src/main.rs`.
 
-CLI 0.40.2 scaffolds pin `thruput-sdk` =0.57.1 and the `nightly-2026-07-01`
-toolchain. The standard interface crates released with SDK 0.57.1 are 0.1.69.
-SDK 0.57.0 pairs with 0.1.68. Check the generated manifest for the installed
-build. Pin SDK and interface crates exactly, and update them together.
+Use the SDK, interface crates, and Rust toolchain selected by the generated
+manifest and toolchain file. Pin SDK and interface crates exactly, and update
+them together.
 SDK 0.56 renamed the RV32 linker script: change `-Tgroundhog-rv32.ld` to
 `-Tthruput-rv32.ld` in `.cargo/config.toml`. `thruput build` refuses contracts
 built against an SDK older than 0.56; rebuild them.

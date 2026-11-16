@@ -2,7 +2,7 @@
 
 Port one workflow first. Preserve the source behavior unless a change is
 deliberate and documented. Read the source contract, its tests, and its
-dependency pins. Read the [Stellar & Soroban](https://thruput.network/docs/ecosystem/stellar/)
+dependency pins. Read the [Stellar & Soroban](https://www.thruput.network/docs/ecosystem/stellar/)
 docs page and use it as a checklist. Verify APIs against the project's resolved
 SDK and installed CLI.
 
