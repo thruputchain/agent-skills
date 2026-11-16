@@ -29,6 +29,12 @@ is `--profile`, then `THRUPUT_PROFILE`, then the project `default_profile`, then
 the global `default_profile`. `devnet` is a legacy name; use `futurenet`. Check
 the result with `thruput config get --sources`.
 
+Signing checks the RPC endpoint against the profile's `network-hash`. Profiles
+without a local runtime manifest need this pin. `init` writes it for built-in
+Futurenet; after upgrading from an older CLI, rerun `thruput init`. For another
+endpoint, get the hash from its operator and run
+`thruput config set network-hash HASH --profile NAME`.
+
 For a project scaffolded before CLI 0.40.0, rebuild against SDK 0.56 or later.
 Change `-Tgroundhog-rv32.ld` to `-Tthruput-rv32.ld` in `.cargo/config.toml`.
 Update event filters from `groundhog-erc20-if` to `thruput-erc20-if` topics.

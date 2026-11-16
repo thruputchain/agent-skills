@@ -26,8 +26,9 @@ for (const kind of ['typescript', 'react']) {
   for (const [, name, code] of blocks) await writeFile(join(directory, name), `${code}\n`);
   await writeFile(join(directory, 'package.json'), JSON.stringify({
     private: true, type: 'module', dependencies: {
-      '@thruputchain/client': '0.25.0',
-      '@thruputchain/protocol': '0.19.1',
+      // React SDK 0.9.0 peers on client ^0.25.0; keep that pair until React is released.
+      '@thruputchain/client': kind === 'react' ? '0.25.0' : '0.26.0',
+      '@thruputchain/protocol': kind === 'react' ? '0.19.1' : '0.20.0',
       ...(kind === 'react' ? {
         '@thruputchain/react': '0.9.0', '@tanstack/react-query': '5.103.1',
         react: '19.1.1', 'react-dom': '19.1.1',

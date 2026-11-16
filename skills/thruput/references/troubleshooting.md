@@ -3,14 +3,14 @@
 Record the command, exit code, exact error, selected network, CLI version, and
 relevant dependency versions. Include public addresses and hashes, but redact
 tokens and private keys. Commands below use the Thruput CLI; the status
-table describes RPC wire format 14.1.1.
+table describes RPC wire format 14.4.0.
 
 ## Diagnose the symptom
 
 | Symptom | Evidence to collect | Next action |
 | --- | --- | --- |
 | Package installation fails | Registry hostname, HTTP status, package name/version; `npm config get @thruputchain:registry` for npm; the registry URL selected by Cargo | Current Thruput packages use public npm and crates.io. Remove obsolete GitHub Packages mappings and select published versions. See [CLI installation](https://www.thruput.network/docs/cli/install/) and the [TypeScript example](typescript.md#read-a-contract). |
-| Runtime or network descriptor is incompatible | `thruput --version`, `thruput status --json`, `thruput toolchain list --json`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For a hosted endpoint, report the mismatch to its operator. Preserve persistent node data while investigating. |
+| Runtime or network identity is incompatible | `thruput --version`, `thruput status --json`, `thruput toolchain list --json`, `thruput config get --sources`, and the exact expected/received values; note any explicit runtime override | For a local node, use the CLI-selected runtime or a source-verified compatible override. For `missing_network_hash` on built-in Futurenet, rerun `thruput init`; for another endpoint, set `network-hash` from its operator. Report a hosted mismatch to its operator. Preserve persistent node data while investigating. |
 | Generated binding and client disagree | `npm ls @thruputchain/client @thruputchain/protocol @thruputchain/react`; CLI version; compiler error; deployed address and network | Install compatible dependencies and regenerate from the deployed address or matching artifact/spec. See [code generation](typescript.md#generate-bindings-for-your-own-contract). Do not edit generated types or suppress peer errors. |
 | Contract inspection cannot retrieve a spec | Address, profile, CLI version, and inspection error or `specStatus` | `notDeployed` means no deployment at the observed snapshot. Native contracts have no embedded RV32 spec. An unavailable artifact is a retrieval error, not a missing deployment; check the endpoint before rebuilding or redeploying. |
 | Submission or observation times out | Original hash, network, signed evidence if saved, error cause and submission cause | Run the inspection procedure below. Keep observing the original hash. A timeout stops observation, not execution; do not sign a replacement automatically. |
