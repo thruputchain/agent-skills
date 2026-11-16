@@ -57,7 +57,7 @@ genuinely needs its lower-level signed-delta or explicit-base operations.
 - `Bytestring` is raw byte storage for lower-level or infrequently replaced
   data. Prefer typed `Value<T>` when a typed value is available.
 - `RCQ<T>` is the SDK's retrocausal queue for concurrent request insertion and
-  ordered processing. Use the [AMM guide](https://thruput.network/docs/guides/build-an-amm/)
+  ordered processing. Use the [AMM guide](https://www.thruput.network/docs/guides/build-an-amm/)
   for a complete queued application rather than assuming ordinary map semantics.
 
 For a token, use `Map<ContractAddress, Balance>` for per-account balances. For

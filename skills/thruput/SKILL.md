@@ -67,7 +67,7 @@ Run it from the directory where the project skill is installed, or add
 
 ## Documentation and versions
 
-Start at <https://thruput.network/docs/> for product documentation. The installed
+Start at <https://www.thruput.network/docs/> for product documentation. The installed
 CLI's `thruput docs` serves its selected documentation snapshot locally.
 
 The installed skill follows the latest maintained source independently of CLI

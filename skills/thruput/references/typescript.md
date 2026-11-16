@@ -97,7 +97,7 @@ This single-tab module handles one unresolved transfer at a time. Call
 recipient address. Obtain `provider` through `discoverWalletProviders` from
 `@thruputchain/client/provider` and let the user choose it. The example uses the
 first account authorized by that wallet. See the
-[wallet picker](https://thruput.network/docs/tools/wallet-integration/#discover-and-connect)
+[wallet picker](https://www.thruput.network/docs/tools/wallet-integration/#discover-and-connect)
 for account selection and discovery cleanup.
 
 ```ts title="wallet.ts"
@@ -253,8 +253,15 @@ after successful execution is not a reason to repeat the write.
 
 ## Discover a deployed spec
 
-For runtime inspection, use `getContractSpec(rpcClient, { address })` from
-`@thruputchain/client/actions` (client 0.26.0 and later). A supported spec
+For runtime inspection, use `getContractSpec` from
+`@thruputchain/client/actions` (client 0.26.0 and later). It takes address
+bytes, not a base58 string or alias:
+
+```ts
+const result = await getContractSpec(client, { address: parseAddress(text) });
+```
+
+A supported spec
 has `artifactSpec.kind: "spec"` and its decoded value in `artifactSpec.spec`.
 Use the codec and decoder helpers in `@thruputchain/client/contract` for dynamic
 decoding. Generated bindings remain the typed application interface.
@@ -282,5 +289,5 @@ transactions. Decoded child calls show what was requested, not what ran.
 - HTTP batching groups independent requests; it does not provide a shared
   snapshot, ordering, or atomicity. Await dependent operations separately.
 
-See [event recovery](https://thruput.network/docs/typescript/events/#resume-without-missing-events)
+See [event recovery](https://www.thruput.network/docs/typescript/events/#resume-without-missing-events)
 and [transaction diagnostics](troubleshooting.md#inspect-the-original-transaction).

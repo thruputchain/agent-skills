@@ -12,6 +12,10 @@ In a Vite React TypeScript app, install:
 npm install --save-exact @thruputchain/react @thruputchain/client @thruputchain/protocol @tanstack/react-query react react-dom
 ```
 
+Install the `@thruputchain/protocol` version that the client depends on.
+`npm ls @thruputchain/protocol` must show one version; two copies can cause
+type mismatches.
+
 Start `thruput node` in another terminal. Keep the app's `<div id="root"></div>`
 and configure a same-origin development proxy in `vite.config.ts`:
 
@@ -106,4 +110,4 @@ React package.
 
 - [Package setup and wallet usage](https://github.com/thruputchain/thruput-react#configure-the-application)
 - [Contract reads and execution guide](https://github.com/thruputchain/thruput-react/blob/main/docs/contract-transactions.md)
-- [React documentation](https://thruput.network/docs/react/)
+- [React documentation](https://www.thruput.network/docs/react/)

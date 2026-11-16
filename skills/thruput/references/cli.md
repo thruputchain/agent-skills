@@ -50,7 +50,7 @@ runtime build. A compatibility error needs diagnosis, not a protocol override.
 
 An ephemeral node loses state when restarted. Pass `--data-dir DIR` when the
 application needs its deployments across restarts. Read the
-[local-node guide](https://thruput.network/docs/cli/local-node/).
+[local-node guide](https://www.thruput.network/docs/cli/local-node/).
 
 Local accounts use ordinary stored keys. On a fresh chain, `thruput node`
 gives the selected Ed25519 key's nonce-zero native account an initial
