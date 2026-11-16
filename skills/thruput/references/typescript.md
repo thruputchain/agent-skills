@@ -237,10 +237,10 @@ thruput codegen ts --address CONTRACT_ADDRESS --profile local -o src/my-contract
 it as `bindingsTs` in JSON output. `codegen` writes the bindings into your
 source tree.
 
-Provide exactly one file or `--address`. Address-based generation retrieves and
-verifies the deployed artifact; it requires a supported embedded spec. The
-`.spec.xdr` and `.spec.json` files are exports of that spec. JSON is not a codegen
-input. Retrieval or validation errors leave an existing output file unchanged.
+Pass either a file or `--address`, not both. With `--address`, the CLI
+downloads and verifies the deployed artifact, which must have a supported
+embedded spec. `.spec.xdr` and `.spec.json` are exports of that spec; JSON is not
+a codegen input. If generation fails, an existing output file is left unchanged.
 
 Use the spec from the deployed build. Regenerate after interface changes;
 do not edit the generated file or maintain a second ABI. Select an interface
@@ -254,15 +254,16 @@ after successful execution is not a reason to repeat the write.
 ## Discover a deployed spec
 
 For runtime inspection, use `getContractSpec(rpcClient, { address })` from
-`@thruputchain/client/actions` with a release that exports it. A supported spec
+`@thruputchain/client/actions` (client 0.26.0 and later). A supported spec
 has `artifactSpec.kind: "spec"` and its decoded value in `artifactSpec.spec`.
 Use the codec and decoder helpers in `@thruputchain/client/contract` for dynamic
 decoding. Generated bindings remain the typed application interface.
 
-No deployment returns `deployment: null` and `artifactSpec: null`. Native,
-absent, and unsupported specs have distinct results; unavailable or malformed
-artifacts throw. Current metadata does not identify historical code, and
-decoded child requests do not prove child execution or outcomes.
+If nothing is deployed, `deployment` and `artifactSpec` are `null`. Other
+`artifactSpec.kind` values identify native contracts, contracts without a spec,
+and unsupported formats. Unavailable or malformed artifacts throw. The spec
+describes the current deployment, not necessarily the code that ran in past
+transactions. Decoded child calls show what was requested, not what ran.
 
 ## Events and transport
 

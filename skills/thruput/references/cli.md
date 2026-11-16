@@ -127,8 +127,8 @@ thruput inspect CONTRACT_ADDRESS --profile local
 thruput inspect CONTRACT_ADDRESS --profile local --json
 ```
 
-An address or saved alias selects the deployment. Inspection reads and verifies
-the deployed artifact without a local build or signing key. Add
+Pass an address or saved alias. Inspection downloads and verifies the deployed
+artifact; it needs no local build or signing key. Add
 `--output contract.spec.json` to export a supported embedded spec, replacing the
 file if it exists. Native contracts have no embedded RV32 spec.
 
